@@ -1,0 +1,6 @@
+services:
+
+  telegram_bot:
+    image: donkeykong245/ez_vocabulator:telegram_bot
+    env_file:
+      - telegram_host.env
