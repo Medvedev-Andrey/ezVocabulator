@@ -6,7 +6,7 @@ COPY go.mod .
 COPY go.sum .
 RUN go mod download
 #   Copy all sources to working directory
-COPY *.go .
+COPY *.go ./
 #   Build the bot
 RUN CGO_ENABLED=0 GOOS=linux go build -o /telegram_bot
 
