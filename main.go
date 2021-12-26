@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
@@ -62,7 +63,21 @@ func main() {
 
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
 		msg.ReplyToMessageID = update.Message.MessageID
-		msg.Text = update.Message.Text + " ... reply!"
+
+		meanings, err := getMeanings(msg.Text)
+		if err == nil {
+			var sb strings.Builder
+
+			sb.WriteString(fmt.Sprintf("Meanings for '%s' are:", msg.Text))
+
+			for _, meaning := range meanings {
+				sb.WriteString(meaning)
+			}
+
+			msg.Text = sb.String()
+		} else {
+			panic(err)
+		}
 
 		if _, err := bot.Send(msg); err != nil {
 			panic(err)
