@@ -64,14 +64,16 @@ func main() {
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
 		msg.ReplyToMessageID = update.Message.MessageID
 
-		meanings, err := getMeanings(msg.Text)
+		xfDictionaryResponse, err := getFromXfEnglishDictionary(msg.Text)
 		if err == nil {
 			var sb strings.Builder
 
 			sb.WriteString(fmt.Sprintf("Meanings for '%s' are:", msg.Text))
 
-			for _, meaning := range meanings {
-				sb.WriteString(meaning)
+			for _, item := range xfDictionaryResponse.Items {
+				for _, definition := range item.Definitions {
+					sb.WriteString(definition.Definition)
+				}
 			}
 
 			msg.Text = sb.String()
