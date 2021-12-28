@@ -124,10 +124,10 @@ func formatXfResponse(response *xfDictionaryResponse) (string, error) {
 		return sb.String(), nil
 	}
 
-	sb.WriteString("<b>Found entries:</b>\n\n")
+	sb.WriteString("<b>Definitions:</b>\n")
 
 	for _, item := range response.Items {
-		sb.WriteString(fmt.Sprintf("▫️%s", item.Word))
+		sb.WriteString(fmt.Sprintf("\n▫️%s", item.Word))
 
 		if item.PartOfSpeech != "" {
 			sb.WriteString(fmt.Sprintf(" <i>(%s)</i>", item.PartOfSpeech))
@@ -139,6 +139,14 @@ func formatXfResponse(response *xfDictionaryResponse) (string, error) {
 			for _, textualPronunciation := range pronunciationEntry.Textual {
 				sb.WriteString(fmt.Sprintf("%s\n", textualPronunciation.Pronunciation))
 			}
+		}
+
+		if len(item.Synonyms) > 0 {
+			sb.WriteString(fmt.Sprintf("<i>Synonyms:</i> %s\n", strings.Join(item.Synonyms, " ,")))
+		}
+
+		if len(item.Antonyms) > 0 {
+			sb.WriteString(fmt.Sprintf("<i>Antonyms:</i> %s\n", strings.Join(item.Synonyms, " ,")))
 		}
 	}
 
