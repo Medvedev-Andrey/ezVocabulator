@@ -68,14 +68,16 @@ func main() {
 		if err == nil {
 			var sb strings.Builder
 
-			sb.WriteString(fmt.Sprintf("Meanings for '%s' are:", msg.Text))
+			sb.WriteString(fmt.Sprintf("Meanings for '%s' are:\n", msg.Text))
 
 			for _, item := range xfDictionaryResponse.Items {
 				for _, definition := range item.Definitions {
 					sb.WriteString(definition.Definition)
+					sb.WriteRune('\n')
 				}
 			}
 
+			msg.ParseMode = "HTML"
 			msg.Text = sb.String()
 		} else {
 			panic(err)
