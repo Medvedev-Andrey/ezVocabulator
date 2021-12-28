@@ -124,8 +124,6 @@ func formatXfResponse(response *xfDictionaryResponse) (string, error) {
 		return sb.String(), nil
 	}
 
-	sb.WriteString("<b>Definitions:</b>\n")
-
 	for _, item := range response.Items {
 		sb.WriteString(fmt.Sprintf("\n▫️%s", item.Word))
 
@@ -142,11 +140,28 @@ func formatXfResponse(response *xfDictionaryResponse) (string, error) {
 		}
 
 		if len(item.Synonyms) > 0 {
-			sb.WriteString(fmt.Sprintf("<i>Synonyms:</i> %s\n", strings.Join(item.Synonyms, ", ")))
+			sb.WriteString(fmt.Sprintf("<code>Synonyms:</code> %s\n", strings.Join(item.Synonyms, ", ")))
 		}
 
 		if len(item.Antonyms) > 0 {
-			sb.WriteString(fmt.Sprintf("<i>Antonyms:</i> %s\n", strings.Join(item.Antonyms, ", ")))
+			sb.WriteString(fmt.Sprintf("<code>Antonyms:</code> %s\n", strings.Join(item.Antonyms, ", ")))
+		}
+
+		if len(item.Definitions) > 0 {
+			sb.WriteString("<code>Definitions:</code>")
+			for i, definition := range item.Definitions {
+				sb.WriteString(fmt.Sprintf("\n%d) %s", i, definition.Definition))
+
+				if len(definition.Examples) > 0 {
+					sb.WriteString("\n<code>Examples:</code>")
+
+					for j, example := range definition.Examples {
+						sb.WriteString(fmt.Sprintf("\n%d) %s", j, example))
+					}
+				}
+
+				sb.WriteRune('\n')
+			}
 		}
 	}
 
