@@ -142,11 +142,11 @@ func formatXfResponse(response *xfDictionaryResponse) (string, error) {
 		}
 
 		if len(item.Synonyms) > 0 {
-			sb.WriteString(fmt.Sprintf("<i>Synonyms:</i> %s\n", strings.Join(item.Synonyms, " ,")))
+			sb.WriteString(fmt.Sprintf("<i>Synonyms:</i> %s\n", strings.Join(item.Synonyms, ", ")))
 		}
 
 		if len(item.Antonyms) > 0 {
-			sb.WriteString(fmt.Sprintf("<i>Antonyms:</i> %s\n", strings.Join(item.Synonyms, " ,")))
+			sb.WriteString(fmt.Sprintf("<i>Antonyms:</i> %s\n", strings.Join(item.Antonyms, ", ")))
 		}
 	}
 
