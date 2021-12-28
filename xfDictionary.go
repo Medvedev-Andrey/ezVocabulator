@@ -94,6 +94,7 @@ func getFromXfEnglishDictionary(word string) (*xfDictionaryResponse, error) {
 		}
 	}
 
+	word = strings.ToLower(word)
 	payload, _ := json.Marshal(xfDictionaryRequest{Text: word})
 	request, _ := http.NewRequest("POST", xfEnglishDictionaryUrl, bytes.NewReader(payload))
 	request.Header.Add("content-type", "application/json")
