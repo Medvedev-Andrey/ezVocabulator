@@ -148,15 +148,12 @@ func formatXfResponse(response *xfDictionaryResponse) (string, error) {
 		}
 
 		if len(item.Definitions) > 0 {
-			sb.WriteString("<code>Definitions:</code>")
-			for i, definition := range item.Definitions {
-				sb.WriteString(fmt.Sprintf("\n%d) %s", i, definition.Definition))
+			for _, definition := range item.Definitions {
+				sb.WriteString(fmt.Sprintf("\n<code>def</code> %s", definition.Definition))
 
 				if len(definition.Examples) > 0 {
-					sb.WriteString("\n<code>Examples:</code>")
-
-					for j, example := range definition.Examples {
-						sb.WriteString(fmt.Sprintf("\n%d) %s", j, example))
+					for _, example := range definition.Examples {
+						sb.WriteString(fmt.Sprintf("\n<code>ex</code> %s", example))
 					}
 				}
 
