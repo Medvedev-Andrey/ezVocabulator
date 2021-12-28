@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
 var (
@@ -113,4 +114,67 @@ func getFromXfEnglishDictionary(word string) (*xfDictionaryResponse, error) {
 	}
 
 	return &response, nil
+}
+
+func formatXfResponse(response *xfDictionaryResponse) (string, error) {
+	var sb strings.Builder
+
+	if len(response.Items) == 0 {
+		sb.WriteString("Nothing has been found ... 😞")
+		return sb.String(), nil
+	}
+
+	sb.WriteString("<b>Found entries:</b>\n\n")
+
+	for _, item := range response.Items {
+		sb.WriteString(fmt.Sprintf("▫️%s", item.Word))
+
+		if item.PartOfSpeech != "" {
+			sb.WriteString(fmt.Sprintf(" <i>(%s)</i>", item.PartOfSpeech))
+		}
+
+		sb.WriteRune('\n')
+
+		for _, pronunciationEntry := range getXfPronunciations(response, &item) {
+			for _, textualPronunciation := range pronunciationEntry.Textual {
+				sb.WriteString(fmt.Sprintf("%s\n", textualPronunciation.Pronunciation))
+			}
+		}
+	}
+
+	return sb.String(), nil
+}
+
+func getXfPronunciations(response *xfDictionaryResponse, xfItem *xfItem) []*xfPronunciationEntry {
+	var pronunciations []*xfPronunciationEntry
+
+	if len(response.Pronunciations) == 0 {
+		return pronunciations
+	}
+
+	if xfItem.PronunciationSectionID != "" {
+		for _, prSection := range response.Pronunciations {
+			if prSection.SectionID == xfItem.PronunciationSectionID {
+				for _, pronunciationSectionEntry := range prSection.Entries {
+					pronunciations = append(pronunciations, &pronunciationSectionEntry)
+				}
+			}
+		}
+	}
+
+	//	If no pronunciations are found
+	//	Append each pronunciation with same entry text
+	if len(pronunciations) == 0 {
+		for _, prSection := range response.Pronunciations {
+			if prSection.SectionID == "" {
+				for _, prSectionEntry := range prSection.Entries {
+					if prSectionEntry.Entry == xfItem.Word {
+						pronunciations = append(pronunciations, &prSectionEntry)
+					}
+				}
+			}
+		}
+	}
+
+	return pronunciations
 }

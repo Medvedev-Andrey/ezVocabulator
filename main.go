@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
@@ -66,19 +65,8 @@ func main() {
 
 		xfDictionaryResponse, err := getFromXfEnglishDictionary(msg.Text)
 		if err == nil {
-			var sb strings.Builder
-
-			sb.WriteString(fmt.Sprintf("Meanings for '%s' are:\n", msg.Text))
-
-			for _, item := range xfDictionaryResponse.Items {
-				for _, definition := range item.Definitions {
-					sb.WriteString(definition.Definition)
-					sb.WriteRune('\n')
-				}
-			}
-
 			msg.ParseMode = "HTML"
-			msg.Text = sb.String()
+			msg.Text, _ = formatXfResponse(xfDictionaryResponse)
 		} else {
 			panic(err)
 		}
