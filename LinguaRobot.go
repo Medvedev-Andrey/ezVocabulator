@@ -146,8 +146,6 @@ func formatLinguaRobotResponse(response *linguaRobotResponse) (string, error) {
 				if len(sense.Synonyms) > 0 {
 					sb.WriteString(fmt.Sprintf("<b>syn</b> %s\n", strings.Join(sense.Synonyms, ", ")))
 				}
-
-				sb.WriteRune('\n')
 			}
 		}
 	}
