@@ -127,14 +127,16 @@ func formatLinguaRobotResponse(response *linguaRobotResponse) (string, error) {
 					break
 				}
 
-				sb.WriteString(fmt.Sprintf("\n<b>def</b> %s\n", sense.Definition))
+				sb.WriteString(fmt.Sprintf("<b>def</b> %s\n", sense.Definition))
 
-				for j, example := range sense.Examples {
-					if j >= maxExamples {
-						break
+				if len(sense.Examples) > 0 {
+					for j, example := range sense.Examples {
+						if j >= maxExamples {
+							break
+						}
+
+						sb.WriteString(fmt.Sprintf("<b>ex</b> %s\n", example))
 					}
-
-					sb.WriteString(fmt.Sprintf("<b>ex</b> %s\n", example))
 				}
 
 				if len(sense.Antonyms) > 0 {
@@ -144,6 +146,8 @@ func formatLinguaRobotResponse(response *linguaRobotResponse) (string, error) {
 				if len(sense.Synonyms) > 0 {
 					sb.WriteString(fmt.Sprintf("<b>syn</b> %s\n", strings.Join(sense.Synonyms, ", ")))
 				}
+
+				sb.WriteRune('\n')
 			}
 		}
 	}
