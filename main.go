@@ -63,10 +63,10 @@ func main() {
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
 		msg.ReplyToMessageID = update.Message.MessageID
 
-		xfDictionaryResponse, err := getFromXfEnglishDictionary(msg.Text)
+		response, err := getDefinitionFromLinguaRobot(msg.Text)
 		if err == nil {
 			msg.ParseMode = "HTML"
-			msg.Text, _ = formatXfResponse(xfDictionaryResponse)
+			msg.Text, _ = formatLinguaRobotResponse(response)
 		} else {
 			panic(err)
 		}
