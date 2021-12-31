@@ -98,7 +98,7 @@ func formatLinguaRobotResponse(response *linguaRobotResponse) (string, error) {
 	}
 
 	for _, item := range response.Entries {
-		sb.WriteString(fmt.Sprintf("\n▫️%s\n", item.Entry))
+		sb.WriteString(fmt.Sprintf("▫️%s\n", item.Entry))
 
 		for _, pronunciation := range item.Pronunctionations {
 			if len(pronunciation.Transcriptions) == 0 {
@@ -119,8 +119,10 @@ func formatLinguaRobotResponse(response *linguaRobotResponse) (string, error) {
 			}
 		}
 
+		sb.WriteRune('\n')
+
 		for _, lexeme := range item.Lexemes {
-			sb.WriteString(fmt.Sprintf("\n%s (<i>%s</i>)\n", lexeme.Lemma, lexeme.PartOfSpeech))
+			sb.WriteString(fmt.Sprintf("%s (<i>%s</i>)\n", lexeme.Lemma, lexeme.PartOfSpeech))
 
 			for i, sense := range lexeme.Senses {
 				if i >= maxSenses {
@@ -146,6 +148,8 @@ func formatLinguaRobotResponse(response *linguaRobotResponse) (string, error) {
 				if len(sense.Synonyms) > 0 {
 					sb.WriteString(fmt.Sprintf("<b>syn</b> %s\n", strings.Join(sense.Synonyms, ", ")))
 				}
+
+				sb.WriteRune('\n')
 			}
 		}
 	}
