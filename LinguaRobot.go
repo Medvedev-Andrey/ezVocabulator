@@ -101,10 +101,20 @@ func formatLinguaRobotResponse(response *linguaRobotResponse) (string, error) {
 		sb.WriteString(fmt.Sprintf("\n▫️%s\n", item.Entry))
 
 		for _, pronunciation := range item.Pronunctionations {
-			regions := strings.Join(pronunciation.Context.Regions, ", ")
-			sb.WriteString(fmt.Sprintf("\n%s: ", regions))
+			if len(pronunciation.Transcriptions) == 0 {
+				continue
+			}
 
-			for _, transcription := range pronunciation.Transcriptions {
+			regions := strings.Join(pronunciation.Context.Regions, ", ")
+			sb.WriteString(fmt.Sprintf("%s: ", regions))
+
+			if len(pronunciation.Transcriptions) > 1 {
+				sb.WriteRune('\n')
+				for _, transcription := range pronunciation.Transcriptions {
+					sb.WriteString(fmt.Sprintf("%s [<i>%s</i>]\n", transcription.Transcription, transcription.Notation))
+				}
+			} else {
+				transcription := pronunciation.Transcriptions[0]
 				sb.WriteString(fmt.Sprintf("%s [<i>%s</i>]\n", transcription.Transcription, transcription.Notation))
 			}
 		}
@@ -117,19 +127,23 @@ func formatLinguaRobotResponse(response *linguaRobotResponse) (string, error) {
 					break
 				}
 
-				sb.WriteString(fmt.Sprintf("\n<code>def</code> %s\n", sense.Definition))
+				sb.WriteString(fmt.Sprintf("\n<b>def</b> %s\n", sense.Definition))
 
 				for j, example := range sense.Examples {
 					if j >= maxExamples {
 						break
 					}
 
-					sb.WriteString(fmt.Sprintf("<code>ex</code> %s\n", example))
+					sb.WriteString(fmt.Sprintf("<b>ex</b> %s\n", example))
 				}
 
-				sb.WriteString(fmt.Sprintf("<code>ant</code> %s\n", strings.Join(sense.Antonyms, ", ")))
+				if len(sense.Antonyms) > 0 {
+					sb.WriteString(fmt.Sprintf("<b>ant</b> %s\n", strings.Join(sense.Antonyms, ", ")))
+				}
 
-				sb.WriteString(fmt.Sprintf("<code>syn</code> %s\n", strings.Join(sense.Synonyms, ", ")))
+				if len(sense.Synonyms) > 0 {
+					sb.WriteString(fmt.Sprintf("<b>syn</b> %s\n", strings.Join(sense.Synonyms, ", ")))
+				}
 			}
 		}
 	}
