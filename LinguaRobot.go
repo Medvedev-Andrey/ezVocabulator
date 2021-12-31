@@ -17,45 +17,45 @@ const (
 )
 
 type linguaRobotResponse struct {
-	entries []linguaRobotEntry `json:"entries"`
+	Entries []linguaRobotEntry `json:"entries"`
 }
 
 type linguaRobotEntry struct {
-	entry             string                      `json:"entry"`
-	pronunctionations []linguaRobotPronunciations `json:"pronunciations"`
-	lexemes           []linguaRobotLexeme         `json:"lexemes"`
+	Entry             string                      `json:"entry"`
+	Pronunctionations []linguaRobotPronunciations `json:"pronunciations"`
+	Lexemes           []linguaRobotLexeme         `json:"lexemes"`
 }
 
 type linguaRobotPronunciations struct {
-	transcriptions []linguaRobotTranscription `json:"transcriptions"`
-	audio          []linguaRobotAudio         `json:"audio"`
-	context        linguaRobotContext         `json:"context"`
+	Transcriptions []linguaRobotTranscription `json:"transcriptions"`
+	Audio          linguaRobotAudio           `json:"audio"`
+	Context        linguaRobotContext         `json:"context"`
 }
 
 type linguaRobotTranscription struct {
-	transcription string `json:"transcription"`
-	notation      string `json:"notation"`
+	Transcription string `json:"transcription"`
+	Notation      string `json:"notation"`
 }
 
 type linguaRobotAudio struct {
-	url string `json:"url"`
+	Url string `json:"url"`
 }
 
 type linguaRobotContext struct {
-	regions []string `json:regions`
+	Regions []string `json:"regions"`
 }
 
 type linguaRobotLexeme struct {
-	lemma        string             `json:"lemma"`
-	partOfSpeech string             `json:"partOfSpeech"`
-	senses       []linguaRobotSense `json:"senses"`
+	Lemma        string             `json:"lemma"`
+	PartOfSpeech string             `json:"partOfSpeech"`
+	Senses       []linguaRobotSense `json:"senses"`
 }
 
 type linguaRobotSense struct {
-	definition string   `json:"definition"`
-	examples   []string `json:"usageExamples"`
-	synonyms   []string `json:"synonyms"`
-	antonyms   []string `json:"antonyms"`
+	Definition string   `json:"definition"`
+	Examples   []string `json:"usageExamples"`
+	Synonyms   []string `json:"synonyms"`
+	Antonyms   []string `json:"antonyms"`
 }
 
 func getDefinitionFromLinguaRobot(item string) (*linguaRobotResponse, error) {
@@ -92,34 +92,34 @@ func getDefinitionFromLinguaRobot(item string) (*linguaRobotResponse, error) {
 func formatLinguaRobotResponse(response *linguaRobotResponse) (string, error) {
 	var sb strings.Builder
 
-	if len(response.entries) == 0 {
+	if len(response.Entries) == 0 {
 		sb.WriteString("Nothing has been found ... 😞")
 		return "", nil
 	}
 
-	for _, item := range response.entries {
-		sb.WriteString(fmt.Sprintf("\n▫️%s\n", item.entry))
+	for _, item := range response.Entries {
+		sb.WriteString(fmt.Sprintf("\n▫️%s\n", item.Entry))
 
-		for _, pronunciation := range item.pronunctionations {
-			regions := strings.Join(pronunciation.context.regions, ", ")
+		for _, pronunciation := range item.Pronunctionations {
+			regions := strings.Join(pronunciation.Context.Regions, ", ")
 			sb.WriteString(fmt.Sprintf("\n%s: ", regions))
 
-			for _, transcription := range pronunciation.transcriptions {
-				sb.WriteString(fmt.Sprintf("%s [<i>%s</i>]\n", transcription.transcription, transcription.notation))
+			for _, transcription := range pronunciation.Transcriptions {
+				sb.WriteString(fmt.Sprintf("%s [<i>%s</i>]\n", transcription.Transcription, transcription.Notation))
 			}
 		}
 
-		for _, lexeme := range item.lexemes {
-			sb.WriteString(fmt.Sprintf("\n%s (<i>%s</i>)\n", lexeme.lemma, lexeme.partOfSpeech))
+		for _, lexeme := range item.Lexemes {
+			sb.WriteString(fmt.Sprintf("\n%s (<i>%s</i>)\n", lexeme.Lemma, lexeme.PartOfSpeech))
 
-			for i, sense := range lexeme.senses {
+			for i, sense := range lexeme.Senses {
 				if i >= maxSenses {
 					break
 				}
 
-				sb.WriteString(fmt.Sprintf("\n<code>def</code> %s\n", sense.definition))
+				sb.WriteString(fmt.Sprintf("\n<code>def</code> %s\n", sense.Definition))
 
-				for j, example := range sense.examples {
+				for j, example := range sense.Examples {
 					if j >= maxExamples {
 						break
 					}
@@ -127,9 +127,9 @@ func formatLinguaRobotResponse(response *linguaRobotResponse) (string, error) {
 					sb.WriteString(fmt.Sprintf("<code>ex</code> %s\n", example))
 				}
 
-				sb.WriteString(fmt.Sprintf("<code>ant</code> %s\n", strings.Join(sense.antonyms, ", ")))
+				sb.WriteString(fmt.Sprintf("<code>ant</code> %s\n", strings.Join(sense.Antonyms, ", ")))
 
-				sb.WriteString(fmt.Sprintf("<code>syn</code> %s\n", strings.Join(sense.synonyms, ", ")))
+				sb.WriteString(fmt.Sprintf("<code>syn</code> %s\n", strings.Join(sense.Synonyms, ", ")))
 			}
 		}
 	}
