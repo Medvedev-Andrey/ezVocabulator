@@ -105,8 +105,13 @@ func formatLinguaRobotResponse(response *linguaRobotResponse) (string, error) {
 				continue
 			}
 
-			regions := strings.Join(pronunciation.Context.Regions, ", ")
-			sb.WriteString(fmt.Sprintf("%s: ", regions))
+			sb.WriteString(strings.Join(pronunciation.Context.Regions, ", "))
+
+			if pronunciation.Audio.Url != "" {
+				sb.WriteString(fmt.Sprintf(" (<a href=\"%s\">🎧 listen</a>)", pronunciation.Audio.Url))
+			}
+
+			sb.WriteString(": ")
 
 			if len(pronunciation.Transcriptions) > 1 {
 				sb.WriteRune('\n')
