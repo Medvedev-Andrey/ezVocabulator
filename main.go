@@ -60,19 +60,33 @@ func main() {
 			continue
 		}
 
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
+		lrResponse, err := getDefinitionFromLinguaRobot(update.Message.Text)
+		if err != nil {
+			response := convertLinguaRobotResponse(lrResponse)
+			contents := formatUserResponse(response)
 
-		response, err := getDefinitionFromLinguaRobot(msg.Text)
-		if err == nil {
-			msg.Text, _ = formatLinguaRobotResponse(response)
+			messageIDToReply := update.Message.MessageID
+			for _, content := range contents {
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
+				msg.ReplyToMessageID = messageIDToReply
+				msg.ParseMode = "HTML"
+				msg.Text = content
+
+				sentMsg, err := bot.Send(msg)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				messageIDToReply = sentMsg.MessageID
+			}
 		} else {
 			log.Println(err)
-			msg.Text = "Failed processing request ... 🤔"
-		}
-		msg.ParseMode = "HTML"
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Failed processing request ... 🤔")
+			msg.ReplyToMessageID = update.Message.MessageID
 
-		if _, err := bot.Send(msg); err != nil {
-			log.Fatal(err)
+			if _, err := bot.Send(msg); err != nil {
+				log.Fatal(err)
+			}
 		}
 	}
 }

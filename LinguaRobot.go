@@ -22,9 +22,9 @@ type linguaRobotResponse struct {
 }
 
 type linguaRobotEntry struct {
-	Entry             string                      `json:"entry"`
-	Pronunctionations []linguaRobotPronunciations `json:"pronunciations"`
-	Lexemes           []linguaRobotLexeme         `json:"lexemes"`
+	Entry          string                      `json:"entry"`
+	Pronunciations []linguaRobotPronunciations `json:"pronunciations"`
+	Lexemes        []linguaRobotLexeme         `json:"lexemes"`
 }
 
 type linguaRobotPronunciations struct {
@@ -90,75 +90,48 @@ func getDefinitionFromLinguaRobot(item string) (*linguaRobotResponse, error) {
 	return &response, nil
 }
 
-func formatLinguaRobotResponse(response *linguaRobotResponse) (string, error) {
-	var sb strings.Builder
+func convertLinguaRobotResponse(lrResponse *linguaRobotResponse) *dictionaryResponse {
+	var response dictionaryResponse
 
-	if len(response.Entries) == 0 {
-		sb.WriteString("Nothing has been found ... 😞")
-		return sb.String(), nil
-	}
+	for _, lrEntry := range lrResponse.Entries {
+		var entry dictionaryEntry
 
-	for _, item := range response.Entries {
-		sb.WriteString(fmt.Sprintf("▫️%s\n", item.Entry))
+		entry.item = lrEntry.Entry
 
-		for _, pronunciation := range item.Pronunctionations {
-			if len(pronunciation.Transcriptions) == 0 {
-				continue
+		for _, lrPronunciation := range lrEntry.Pronunciations {
+			var pronunciation entryPronunciation
+
+			pronunciation.audioUrl = lrPronunciation.Audio.Url
+			pronunciation.regions = lrPronunciation.Context.Regions
+
+			for _, lrTranscription := range lrPronunciation.Transcriptions {
+				transcription := fmt.Sprintf("%s (%s)", lrTranscription.Transcription, lrTranscription.Notation)
+				pronunciation.transcriptions = append(pronunciation.transcriptions, transcription)
 			}
 
-			sb.WriteString(strings.Join(pronunciation.Context.Regions, ", "))
-
-			if pronunciation.Audio.Url != "" {
-				sb.WriteString(fmt.Sprintf(" (<a href=\"%s\">🎧 listen</a>)", pronunciation.Audio.Url))
-			}
-
-			sb.WriteString(": ")
-
-			if len(pronunciation.Transcriptions) > 1 {
-				sb.WriteRune('\n')
-				for _, transcription := range pronunciation.Transcriptions {
-					sb.WriteString(fmt.Sprintf("%s [<i>%s</i>]\n", transcription.Transcription, transcription.Notation))
-				}
-			} else {
-				transcription := pronunciation.Transcriptions[0]
-				sb.WriteString(fmt.Sprintf("%s [<i>%s</i>]\n", transcription.Transcription, transcription.Notation))
-			}
+			entry.pronunciations = append(entry.pronunciations, pronunciation)
 		}
 
-		sb.WriteRune('\n')
+		for _, lrLexeme := range lrEntry.Lexemes {
+			var lexeme entryLexeme
 
-		for _, lexeme := range item.Lexemes {
-			sb.WriteString(fmt.Sprintf("%s (<i>%s</i>)\n", lexeme.Lemma, lexeme.PartOfSpeech))
+			lexeme.lemma = lrLexeme.Lemma
+			lexeme.partOfSpeech = lrLexeme.PartOfSpeech
 
-			for i, sense := range lexeme.Senses {
-				if i >= maxSenses {
-					break
-				}
+			for _, lrSense := range lrLexeme.Senses {
+				var definition lexemeDefinition
 
-				sb.WriteString(fmt.Sprintf("<b>def</b> %s\n", sense.Definition))
+				definition.definition = lrSense.Definition
+				definition.antonyms = lrSense.Antonyms
+				definition.synonyms = lrSense.Synonyms
+				definition.examples = lrSense.Examples
 
-				if len(sense.Examples) > 0 {
-					for j, example := range sense.Examples {
-						if j >= maxExamples {
-							break
-						}
-
-						sb.WriteString(fmt.Sprintf("<b>ex</b> %s\n", example))
-					}
-				}
-
-				if len(sense.Antonyms) > 0 {
-					sb.WriteString(fmt.Sprintf("<b>ant</b> %s\n", strings.Join(sense.Antonyms, ", ")))
-				}
-
-				if len(sense.Synonyms) > 0 {
-					sb.WriteString(fmt.Sprintf("<b>syn</b> %s\n", strings.Join(sense.Synonyms, ", ")))
-				}
-
-				sb.WriteRune('\n')
+				lexeme.definitions = append(lexeme.definitions, definition)
 			}
+
+			entry.lexemes = append(entry.lexemes, lexeme)
 		}
 	}
 
-	return sb.String(), nil
+	return &response
 }
