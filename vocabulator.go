@@ -64,11 +64,11 @@ func formatUserResponse(dictionaryResponse *dictionaryResponse) []string {
 		return []string{"Nothing has been found ... 😞"}
 	}
 
-	var sb *strings.Builder
+	var sb strings.Builder
 	var response response
 
 	for _, item := range dictionaryResponse.entries {
-		response.append(sb, fmt.Sprintf("▫️%s\n", item.item))
+		response.append(&sb, fmt.Sprintf("▫️%s\n", item.item))
 
 		for _, pronunciation := range item.pronunciations {
 			var pronunciationSb strings.Builder
@@ -87,20 +87,20 @@ func formatUserResponse(dictionaryResponse *dictionaryResponse) []string {
 				pronunciationSb.WriteString(fmt.Sprintf(": %s\n", strings.Join(pronunciation.transcriptions, " | ")))
 			}
 
-			response.append(sb, pronunciationSb.String())
+			response.append(&sb, pronunciationSb.String())
 		}
 
-		response.append(sb, "\n")
+		response.append(&sb, "\n")
 
 		for _, lexeme := range item.lexemes {
-			response.append(sb, fmt.Sprintf("%s (<i>%s</i>)\n", lexeme.lemma, lexeme.partOfSpeech))
+			response.append(&sb, fmt.Sprintf("%s (<i>%s</i>)\n", lexeme.lemma, lexeme.partOfSpeech))
 
 			for i, sense := range lexeme.definitions {
 				if i >= maxSenses {
 					break
 				}
 
-				response.append(sb, fmt.Sprintf("<b>def</b> %s\n", sense.definition))
+				response.append(&sb, fmt.Sprintf("<b>def</b> %s\n", sense.definition))
 
 				if len(sense.examples) > 0 {
 					for j, example := range sense.examples {
@@ -108,24 +108,24 @@ func formatUserResponse(dictionaryResponse *dictionaryResponse) []string {
 							break
 						}
 
-						response.append(sb, fmt.Sprintf("<b>ex</b> %s\n", example))
+						response.append(&sb, fmt.Sprintf("<b>ex</b> %s\n", example))
 					}
 				}
 
 				if len(sense.antonyms) > 0 {
-					response.append(sb, fmt.Sprintf("<b>ant</b> %s\n", strings.Join(sense.antonyms, ", ")))
+					response.append(&sb, fmt.Sprintf("<b>ant</b> %s\n", strings.Join(sense.antonyms, ", ")))
 				}
 
 				if len(sense.synonyms) > 0 {
-					response.append(sb, fmt.Sprintf("<b>syn</b> %s\n", strings.Join(sense.synonyms, ", ")))
+					response.append(&sb, fmt.Sprintf("<b>syn</b> %s\n", strings.Join(sense.synonyms, ", ")))
 				}
 			}
 
-			response.append(sb, "\n")
+			response.append(&sb, "\n")
 		}
 	}
 
-	response.finish(sb)
+	response.finish(&sb)
 	return response.contents
 }
 
