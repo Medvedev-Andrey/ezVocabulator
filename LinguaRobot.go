@@ -95,7 +95,7 @@ func formatLinguaRobotResponse(response *linguaRobotResponse) (string, error) {
 
 	if len(response.Entries) == 0 {
 		sb.WriteString("Nothing has been found ... 😞")
-		return "", nil
+		return sb.String(), nil
 	}
 
 	for _, item := range response.Entries {
