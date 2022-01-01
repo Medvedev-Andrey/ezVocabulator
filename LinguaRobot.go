@@ -131,6 +131,8 @@ func convertLinguaRobotResponse(lrResponse *linguaRobotResponse) *dictionaryResp
 
 			entry.lexemes = append(entry.lexemes, lexeme)
 		}
+
+		response.entries = append(response.entries, entry)
 	}
 
 	return &response
