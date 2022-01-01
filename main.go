@@ -61,7 +61,7 @@ func main() {
 		}
 
 		lrResponse, err := getDefinitionFromLinguaRobot(update.Message.Text)
-		if err != nil {
+		if err == nil {
 			response := convertLinguaRobotResponse(lrResponse)
 			contents := formatUserResponse(response)
 
