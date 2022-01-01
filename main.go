@@ -61,18 +61,18 @@ func main() {
 		}
 
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
-		msg.ReplyToMessageID = update.Message.MessageID
 
 		response, err := getDefinitionFromLinguaRobot(msg.Text)
 		if err == nil {
-			msg.ParseMode = "HTML"
 			msg.Text, _ = formatLinguaRobotResponse(response)
 		} else {
-			panic(err)
+			log.Println(err)
+			msg.Text = "Failed processing request ... 🤔"
 		}
+		msg.ParseMode = "HTML"
 
 		if _, err := bot.Send(msg); err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 	}
 }

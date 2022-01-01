@@ -9,7 +9,7 @@ import (
 func processRequest(request *http.Request) ([]byte, error) {
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
-		fmt.Printf("Failed processing request")
+		fmt.Printf("Failed processing HTTP request")
 		return nil, err
 	}
 

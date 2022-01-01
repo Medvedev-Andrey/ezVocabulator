@@ -12,6 +12,7 @@ import (
 
 const (
 	linguaRobotRequestFormat = "https://lingua-robot.p.rapidapi.com/language/v1/entries/en/%s"
+	linguaRobotApiHost       = "lingua-robot.p.rapidapi.com"
 	maxExamples              = 3
 	maxSenses                = 5
 )
@@ -70,7 +71,7 @@ func getDefinitionFromLinguaRobot(item string) (*linguaRobotResponse, error) {
 	item = strings.ToLower(item)
 	requestUrl := fmt.Sprintf(linguaRobotRequestFormat, url.PathEscape(item))
 	request, _ := http.NewRequest("GET", requestUrl, nil)
-	request.Header.Add("x-rapidapi-host", "lingua-robot.p.rapidapi.com")
+	request.Header.Add("x-rapidapi-host", linguaRobotApiHost)
 	request.Header.Add("x-rapidapi-key", apiToken)
 
 	contents, err := processRequest(request)
@@ -82,7 +83,7 @@ func getDefinitionFromLinguaRobot(item string) (*linguaRobotResponse, error) {
 	var response linguaRobotResponse
 	err = json.Unmarshal(contents, &response)
 	if err != nil {
-		fmt.Printf("Failed XF Dictionary response meanings deserialization from Lingua Robot for '%s'", item)
+		fmt.Printf("Failed response deserialization from Lingua Robot for '%s'", item)
 		return nil, err
 	}
 
