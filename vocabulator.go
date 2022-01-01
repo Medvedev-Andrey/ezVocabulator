@@ -100,7 +100,15 @@ func formatUserResponse(dictionaryResponse *dictionaryResponse) []string {
 					break
 				}
 
-				response.append(&sb, fmt.Sprintf("<b>def</b> %s\n", sense.definition))
+				response.append(&sb, fmt.Sprintf("\n<b>def</b> %s\n", sense.definition))
+
+				if len(sense.antonyms) > 0 {
+					response.append(&sb, fmt.Sprintf("<b>ant</b> %s\n", strings.Join(sense.antonyms, ", ")))
+				}
+
+				if len(sense.synonyms) > 0 {
+					response.append(&sb, fmt.Sprintf("<b>syn</b> %s\n", strings.Join(sense.synonyms, ", ")))
+				}
 
 				if len(sense.examples) > 0 {
 					for j, example := range sense.examples {
@@ -110,14 +118,6 @@ func formatUserResponse(dictionaryResponse *dictionaryResponse) []string {
 
 						response.append(&sb, fmt.Sprintf("<b>ex</b> %s\n", example))
 					}
-				}
-
-				if len(sense.antonyms) > 0 {
-					response.append(&sb, fmt.Sprintf("<b>ant</b> %s\n", strings.Join(sense.antonyms, ", ")))
-				}
-
-				if len(sense.synonyms) > 0 {
-					response.append(&sb, fmt.Sprintf("<b>syn</b> %s\n", strings.Join(sense.synonyms, ", ")))
 				}
 			}
 
