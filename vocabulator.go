@@ -84,9 +84,10 @@ func formatUserResponse(dictionaryResponse *dictionaryResponse) []string {
 			}
 
 			if len(pronunciation.transcriptions) > 0 {
-				pronunciationSb.WriteString(fmt.Sprintf(": %s\n", strings.Join(pronunciation.transcriptions, " | ")))
+				pronunciationSb.WriteString(fmt.Sprintf(": %s", strings.Join(pronunciation.transcriptions, " | ")))
 			}
 
+			pronunciationSb.WriteRune('\n')
 			response.append(&sb, pronunciationSb.String())
 		}
 
