@@ -93,7 +93,7 @@ func formatUserResponse(dictionaryResponse *dictionaryResponse) []string {
 		response.append(&sb, "\n")
 
 		for _, lexeme := range item.lexemes {
-			response.append(&sb, fmt.Sprintf("%s (<i>%s</i>)\n", lexeme.lemma, lexeme.partOfSpeech))
+			response.append(&sb, fmt.Sprintf("<u>%s (<i>%s</i>)</u>\n", lexeme.lemma, lexeme.partOfSpeech))
 
 			for i, sense := range lexeme.definitions {
 				if i >= maxSenses {
