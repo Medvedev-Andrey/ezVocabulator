@@ -89,13 +89,13 @@ func getUserRequests(db *sql.DB, userID int) ([]string, error) {
 	var err error
 	defer func() {
 		if err != nil {
-			log.Printf("Failed requesting history for user with ID %d. %s", userID, err)
+			log.Printf("Failed requesting history for user with ID '%d'. %s", userID, err)
 		} else {
-			log.Printf("Successfully requested history for user with ID %d", userID)
+			log.Printf("Successfully requested history for user with ID '%d'", userID)
 		}
 	}()
 
-	log.Printf("Requesting history for user with ID %d ...", userID)
+	log.Printf("Requesting history for user with ID '%d' ...", userID)
 	getUserDataStatement := `
 		SELECT data FROM dict_requests 
 		WHERE user_id = $1`
@@ -105,7 +105,7 @@ func getUserRequests(db *sql.DB, userID int) ([]string, error) {
 	}
 
 	if err == sql.ErrNoRows {
-		log.Printf("Found no history for user with ID %d", userID)
+		log.Printf("Found no history for user with ID '%d'", userID)
 		err = nil
 		return []string{}, nil
 	}
@@ -114,9 +114,13 @@ func getUserRequests(db *sql.DB, userID int) ([]string, error) {
 	re := regexp.MustCompile(`\^([^\^]*),[0-9]+`)
 	for rows.Next() {
 		var data string
-		rows.Scan(&data)
+		err = rows.Scan(&data)
 
-		log.Print(data)
+		if err != nil {
+			log.Printf("Error while acquiring user requests history from row. %q", err)
+			continue
+		}
+
 		for _, match := range re.FindAllSubmatch([]byte(data), -1) {
 			userRequests = append(userRequests, string(match[1]))
 		}
