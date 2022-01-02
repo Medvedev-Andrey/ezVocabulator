@@ -15,19 +15,30 @@ const (
 	appURL = "https://ezvocabulator.herokuapp.com/"
 )
 
-func initTelegram(botToken string) *tgbotapi.BotAPI {
+func initTelegram(botToken string) (*tgbotapi.BotAPI, error) {
+	log.Print("Setting up Telegram API connection")
+
 	bot, err := tgbotapi.NewBotAPI(botToken)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	url := appURL + bot.Token
 	_, err = bot.SetWebhook(tgbotapi.NewWebhook(url))
 	if err != nil {
+		return nil, err
+	}
+
+	info, err := bot.GetWebhookInfo()
+	if err != nil {
 		log.Fatal(err)
 	}
 
-	return bot
+	if info.LastErrorDate != 0 {
+		log.Printf("Telegram callback failed: %s", info.LastErrorMessage)
+	}
+
+	return bot, nil
 }
 
 var (
@@ -57,20 +68,14 @@ func main() {
 		log.Fatalf("Error opening database: %q", err)
 	}
 
-	err = ensureDictionaryRequestDBExists()
-	if err != nil {
-		log.Fatalf("%q", err)
-	}
-
-	bot = initTelegram(botToken)
-
-	info, err := bot.GetWebhookInfo()
+	err = ensureDictionaryRequestDBExists(db)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if info.LastErrorDate != 0 {
-		log.Printf("Telegram callback failed: %s", info.LastErrorMessage)
+	bot, err := initTelegram(botToken)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	updates := bot.ListenForWebhook("/" + bot.Token)
@@ -88,12 +93,14 @@ func main() {
 }
 
 func handleDictionaryRequest(inMessage *tgbotapi.Message) {
+	log.Printf("Handling dictionary request '%s' from user with ID %d", inMessage.Text, inMessage.From.ID)
+
 	lrResponse, err := getDefinitionFromLinguaRobot(inMessage.Text)
 	if err == nil && len(lrResponse.Entries) > 0 {
 		response := convertLinguaRobotResponse(lrResponse)
 		contents := formatUserResponse(response)
 
-		storeDictionaryRequest(db, inMessage.Contact.UserID, inMessage.Text)
+		storeDictionaryRequest(db, inMessage.From.ID, inMessage.Text)
 
 		messageIDToReply := inMessage.MessageID
 		for _, content := range contents {

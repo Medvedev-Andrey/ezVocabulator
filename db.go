@@ -14,7 +14,7 @@ type dictRequestsRow struct {
 	data   string
 }
 
-func ensureDictionaryRequestDBExists() error {
+func ensureDictionaryRequestDBExists(db *sql.DB) error {
 	log.Print("Checking dictionary requests database exists")
 
 	createTableStatement := `
