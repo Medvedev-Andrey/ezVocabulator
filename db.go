@@ -116,6 +116,7 @@ func getUserRequests(db *sql.DB, userID int) ([]string, error) {
 		var data string
 		rows.Scan(&data)
 
+		log.Print(data)
 		for _, match := range re.FindAllSubmatch([]byte(data), -1) {
 			userRequests = append(userRequests, string(match[1]))
 		}
