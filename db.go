@@ -18,13 +18,13 @@ func ensureDictionaryRequestDBExists() error {
 	log.Print("Checking dictionary requests database exists")
 
 	createTableStatement := `
-		"CREATE TABLE IF NOT EXISTS dict_requests 
+		CREATE TABLE IF NOT EXISTS dict_requests 
 		( 
 			date char() NOT NULL, 
 			user_id int NOT NULL, 
 			data text, 
 			PRIMARY KEY(date, user_id)
-		)"`
+		)`
 
 	_, err := db.Exec(createTableStatement)
 	return err
@@ -85,7 +85,7 @@ func storeDictionaryRequest(db *sql.DB, userID int, item string) error {
 }
 
 func formatDictionaryRequest(item string, daysCount int) string {
-	return fmt.Sprintf("^%s,%s", item, daysCount)
+	return fmt.Sprintf("^%s,%d", item, daysCount)
 }
 
 func containsDuplicate(data string, item string) bool {
