@@ -53,7 +53,7 @@ func storeDictionaryRequest(db *sql.DB, userID int, item string) error {
 		return err
 	}
 
-	if err == sql.ErrNoRows {
+	if err != sql.ErrNoRows {
 		dictRequest := new(dictRequestsRow)
 		row.Scan(&dictRequest.date, &dictRequest.userID, &dictRequest.data)
 
