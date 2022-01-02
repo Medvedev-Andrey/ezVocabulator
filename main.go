@@ -8,6 +8,7 @@ import (
 	"os"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	_ "github.com/lib/pq"
 )
 
 const (

@@ -59,10 +59,6 @@ func (response *response) finish(builder *strings.Builder) {
 }
 
 func formatUserResponse(dictionaryResponse *dictionaryResponse) []string {
-	if len(dictionaryResponse.entries) == 0 {
-		return []string{"Nothing has been found ... 😞"}
-	}
-
 	var sb strings.Builder
 	var response response
 
