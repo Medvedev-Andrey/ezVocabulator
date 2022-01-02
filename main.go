@@ -90,7 +90,7 @@ func main() {
 			continue
 		}
 
-		if update.Message.Text == "\\history" {
+		if update.Message.Text == "/history" {
 			handleHistoryRequest(update.Message)
 		} else {
 			handleDictionaryRequest(update.Message)
