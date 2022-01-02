@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	_ "github.com/lib/pq"
@@ -89,7 +90,42 @@ func main() {
 			continue
 		}
 
-		handleDictionaryRequest(update.Message)
+		if update.Message.Text == "\\history" {
+			handleHistoryRequest(update.Message)
+		} else {
+			handleDictionaryRequest(update.Message)
+		}
+	}
+}
+
+func handleHistoryRequest(inMessage *tgbotapi.Message) {
+	log.Printf("Handling history request from user with ID %d", inMessage.From.ID)
+
+	userRequests, err := getUserRequests(db, inMessage.From.ID)
+	if err == nil && len(userRequests) > 0 {
+		msg := tgbotapi.NewMessage(inMessage.Chat.ID, "")
+		msg.ReplyToMessageID = inMessage.MessageID
+		msg.Text = strings.Join(userRequests, ", ")
+
+		_, err := bot.Send(msg)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		var message string
+		if err != nil {
+			log.Println(err)
+			message = "Failed processing request ... 🤔"
+		} else {
+			message = "Seems like you has not requested any dictionary info ... 😞"
+		}
+
+		msg := tgbotapi.NewMessage(inMessage.Chat.ID, message)
+		msg.ReplyToMessageID = inMessage.MessageID
+
+		if _, err := bot.Send(msg); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 

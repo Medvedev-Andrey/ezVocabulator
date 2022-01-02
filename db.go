@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -82,6 +83,45 @@ func storeDictionaryRequest(db *sql.DB, userID int, item string) error {
 	}
 
 	return nil
+}
+
+func getUserRequests(db *sql.DB, userID int) ([]string, error) {
+	var err error
+	defer func() {
+		if err != nil {
+			log.Printf("Failed requesting history for user with ID %d. %s", userID, err)
+		} else {
+			log.Printf("Successfully requested history for user with ID %d", userID)
+		}
+	}()
+
+	log.Printf("Requesting history for user with ID %d ...", userID)
+	getUserDataStatement := `
+		SELECT data FROM dict_requests 
+		WHERE user_id = $1`
+	rows, err := db.Query(getUserDataStatement, userID)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+
+	if err == sql.ErrNoRows {
+		log.Printf("Found no history for user with ID %d", userID)
+		err = nil
+		return []string{}, nil
+	}
+
+	var userRequests []string
+	re := regexp.MustCompile(`\^([^\^]*),[0-9]+`)
+	for rows.Next() {
+		var data string
+		rows.Scan(&data)
+
+		for _, match := range re.FindAllSubmatch([]byte(data), -1) {
+			userRequests = append(userRequests, string(match[1]))
+		}
+	}
+
+	return userRequests, nil
 }
 
 func formatDictionaryRequest(item string, daysCount int) string {
