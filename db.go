@@ -20,10 +20,10 @@ func ensureDictionaryRequestDBExists() error {
 	createTableStatement := `
 		CREATE TABLE IF NOT EXISTS dict_requests 
 		( 
-			date char() NOT NULL, 
+			date char(10) NOT NULL, 
 			user_id int NOT NULL, 
 			data text, 
-			PRIMARY KEY(date, user_id)
+			PRIMARY KEY (date, user_id)
 		)`
 
 	_, err := db.Exec(createTableStatement)
