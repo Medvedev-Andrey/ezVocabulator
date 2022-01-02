@@ -117,7 +117,7 @@ func handleHistoryRequest(inMessage *tgbotapi.Message) {
 			log.Println(err)
 			message = "Failed processing request ... 🤔"
 		} else {
-			message = "Seems like you has not requested any dictionary info ... 😞"
+			message = "Seems like you have not requested any dictionary info yet ... 😞"
 		}
 
 		msg := tgbotapi.NewMessage(inMessage.Chat.ID, message)
