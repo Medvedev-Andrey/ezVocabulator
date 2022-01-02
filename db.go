@@ -39,7 +39,7 @@ func storeDictionaryRequest(db *sql.DB, userID int, item string) error {
 		if err != nil {
 			log.Printf("Failed storing dictionary request for '%d' user ID by %s. %s", userID, date, err)
 		} else {
-			log.Printf("Successfully stored dictionary request for '%d' user ID by %s. %s", userID, date, err)
+			log.Printf("Successfully stored dictionary request for '%d' user ID by %s", userID, date)
 		}
 	}()
 
