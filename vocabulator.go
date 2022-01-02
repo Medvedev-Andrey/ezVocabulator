@@ -8,8 +8,7 @@ import (
 )
 
 type dictionaryResponse struct {
-	original string
-	entries  []dictionaryEntry
+	entries []dictionaryEntry
 }
 
 type dictionaryEntry struct {
