@@ -11,6 +11,11 @@ import (
 	_ "github.com/lib/pq"
 )
 
+var (
+	bot *tgbotapi.BotAPI
+	db  *sql.DB
+)
+
 const (
 	appURL = "https://ezvocabulator.herokuapp.com/"
 )
@@ -18,7 +23,8 @@ const (
 func initTelegram(botToken string) (*tgbotapi.BotAPI, error) {
 	log.Print("Setting up Telegram API connection")
 
-	bot, err := tgbotapi.NewBotAPI(botToken)
+	var err error
+	bot, err = tgbotapi.NewBotAPI(botToken)
 	if err != nil {
 		return nil, err
 	}
@@ -40,11 +46,6 @@ func initTelegram(botToken string) (*tgbotapi.BotAPI, error) {
 
 	return bot, nil
 }
-
-var (
-	bot *tgbotapi.BotAPI
-	db  *sql.DB
-)
 
 func main() {
 	botToken := os.Getenv("TELEGRAM_API_TOKEN")
