@@ -104,6 +104,8 @@ func getUserRequests(db *sql.DB, userID int) ([]string, error) {
 		return nil, err
 	}
 
+	defer rows.Close()
+
 	if err == sql.ErrNoRows {
 		log.Printf("Found no history for user with ID '%d'", userID)
 		err = nil
@@ -113,7 +115,7 @@ func getUserRequests(db *sql.DB, userID int) ([]string, error) {
 	var userRequests []string
 	re := regexp.MustCompile(`\^([^\^]*),[0-9]+`)
 	for rows.Next() {
-		var data string
+		var data []byte
 		err = rows.Scan(&data)
 
 		if err != nil {
@@ -121,7 +123,7 @@ func getUserRequests(db *sql.DB, userID int) ([]string, error) {
 			continue
 		}
 
-		for _, match := range re.FindAllSubmatch([]byte(data), -1) {
+		for _, match := range re.FindAllSubmatch(data, -1) {
 			userRequests = append(userRequests, string(match[1]))
 		}
 	}
