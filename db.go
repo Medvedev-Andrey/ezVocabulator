@@ -7,8 +7,6 @@ import (
 	"regexp"
 	"strings"
 	"time"
-
-	"github.com/lib/pq"
 )
 
 type dictRequestsRow struct {
@@ -101,22 +99,6 @@ func storeDictionaryRequest(db *sql.DB, userID int, item string) error {
 		if rowsAffected == 0 {
 			err = fmt.Errorf("no rows were affected by Database update")
 		}
-
-		var data string
-		getRowStatement := `
-			SELECT data FROM dict_requests 
-			WHERE user_id = $1 AND date = $2`
-		err = db.QueryRow(getRowStatement, userID, date).Scan(&data)
-
-		if err != nil {
-			return err
-		}
-
-		if data == "" {
-			err = fmt.Errorf("failed inserting new row for user dictionary request")
-		} else {
-			log.Printf("Stored data is '%s'", data)
-		}
 	}
 
 	return nil
@@ -154,7 +136,7 @@ func getUserRequests(db *sql.DB, userID int) ([]string, error) {
 	re := regexp.MustCompile(`\^([^\^]*),[0-9]+`)
 	for rows.Next() {
 		var data []byte
-		err = rows.Scan(pq.Array(&data))
+		err = rows.Scan(&data)
 
 		if err != nil {
 			log.Printf("Error while acquiring user requests history from row. %q", err)
