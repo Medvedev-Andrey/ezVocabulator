@@ -46,17 +46,30 @@ func storeDictionaryRequest(db *sql.DB, userID int, item string) error {
 		}
 	}()
 
+	var exists bool
 	log.Printf("Storing dictionary request for %d user ID by %s ...", userID, date)
-	getRowStatement := `
-		SELECT * FROM dict_requests 
-		WHERE user_id = $1 AND date = $2`
-	row := db.QueryRow(getRowStatement, userID, date)
-	err = row.Err()
+	existsStatement := `
+		SELECT EXISTS (
+			SELECT user_id FROM dict_requests 
+			WHERE user_id = $1 AND date = $2 
+		)`
+	err = db.QueryRow(existsStatement, userID, date).Scan(&exists)
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
 
-	if err != sql.ErrNoRows {
+	log.Printf("Dictionary requests are present for for %d user ID by %s: %t", userID, date, exists)
+
+	if exists {
+		getRowStatement := `
+			SELECT user_id FROM dict_requests 
+			WHERE user_id = $1 AND date = $2`
+		row := db.QueryRow(getRowStatement, userID, date)
+		err = row.Err()
+		if err != nil {
+			return err
+		}
+
 		dictRequest := new(dictRequestsRow)
 		row.Scan(&dictRequest.date, &dictRequest.userID, &dictRequest.data)
 
