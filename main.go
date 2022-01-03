@@ -3,10 +3,10 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	_ "github.com/lib/pq"
@@ -113,24 +113,14 @@ func handleHistoryRequest(inMessage *tgbotapi.Message) {
 		return
 	}
 
-	file, err := ioutil.TempFile("", "*.txt")
-	if err != nil {
-		handleErrorWithReply(inMessage, err)
-		return
-	}
-	defer os.Remove(file.Name())
-
-	for _, userRequest := range userRequests {
-		_, err := file.WriteString(userRequest + "\n")
-		if err != nil {
-			handleErrorWithReply(inMessage, err)
-			return
-		}
-	}
-
 	if err != nil {
 		handleErrorWithReply(inMessage, err)
 	} else {
+		file := tgbotapi.FileBytes{
+			Name:  "user_history.txt",
+			Bytes: []byte(strings.Join(userRequests, "\n")),
+		}
+
 		msg := tgbotapi.NewDocumentUpload(inMessage.Chat.ID, file)
 		msg.ReplyToMessageID = inMessage.MessageID
 
