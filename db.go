@@ -40,13 +40,13 @@ func storeDictionaryRequest(db *sql.DB, userID int, item string) error {
 	var err error
 	defer func() {
 		if err != nil {
-			log.Printf("Failed storing dictionary request for '%d' user ID by %s. %s", userID, date, err)
+			log.Printf("Failed storing dictionary request for %d user ID by %s. %s", userID, date, err)
 		} else {
-			log.Printf("Successfully stored dictionary request for '%d' user ID by %s", userID, date)
+			log.Printf("Successfully stored dictionary request for %d user ID by %s", userID, date)
 		}
 	}()
 
-	log.Printf("Storing dictionary request for '%d' user ID by %s ...", userID, date)
+	log.Printf("Storing dictionary request for %d user ID by %s ...", userID, date)
 	getRowStatement := `
 		SELECT * FROM dict_requests 
 		WHERE user_id = $1 AND date = $2`
@@ -77,10 +77,16 @@ func storeDictionaryRequest(db *sql.DB, userID int, item string) error {
 		insertRowStatement := `
 			INSERT INTO dict_requests (date, user_id, data)
 			VALUES ($1, $2, $3)`
-		row = db.QueryRow(insertRowStatement, date, userID, formatDictionaryRequest(item, daysCount))
-		err = row.Err()
+
+		var res sql.Result
+		res, err = db.Exec(insertRowStatement, date, userID, formatDictionaryRequest(item, daysCount))
 		if err != nil {
 			return err
+		}
+
+		rowsAffected, _ := res.RowsAffected()
+		if rowsAffected == 0 {
+			err = fmt.Errorf("no rows were affected by Database update")
 		}
 	}
 
@@ -91,13 +97,13 @@ func getUserRequests(db *sql.DB, userID int) ([]string, error) {
 	var err error
 	defer func() {
 		if err != nil {
-			log.Printf("Failed requesting history for user with ID '%d'. %s", userID, err)
+			log.Printf("Failed requesting history for user with ID %d. %s", userID, err)
 		} else {
-			log.Printf("Successfully requested history for user with ID '%d'", userID)
+			log.Printf("Successfully requested history for user with ID %d", userID)
 		}
 	}()
 
-	log.Printf("Requesting history for user with ID '%d' ...", userID)
+	log.Printf("Requesting history for user with ID %d ...", userID)
 	getUserDataStatement := `
 		SELECT data FROM dict_requests 
 		WHERE user_id = $1`
@@ -110,7 +116,7 @@ func getUserRequests(db *sql.DB, userID int) ([]string, error) {
 	defer rows.Close()
 
 	if err == sql.ErrNoRows {
-		log.Printf("Found no history for user with ID '%d'", userID)
+		log.Printf("Found no history for user with ID %d", userID)
 		err = nil
 		return []string{}, nil
 	}
@@ -125,7 +131,7 @@ func getUserRequests(db *sql.DB, userID int) ([]string, error) {
 			log.Printf("Error while acquiring user requests history from row. %q", err)
 			continue
 		} else if len(data) == 0 {
-			log.Printf("Empty user requests history for '%d'", userID)
+			log.Printf("Empty user requests history for %d", userID)
 			continue
 		}
 
