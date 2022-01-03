@@ -60,7 +60,7 @@ func storeDictionaryRequest(db *sql.DB, userID int, item string) error {
 
 	if exists {
 		getRowStatement := `
-			SELECT user_id FROM dict_requests 
+			SELECT data FROM dict_requests 
 			WHERE user_id = $1 AND date = $2`
 		row := db.QueryRow(getRowStatement, userID, date)
 		err = row.Err()
@@ -68,19 +68,19 @@ func storeDictionaryRequest(db *sql.DB, userID int, item string) error {
 			return err
 		}
 
-		dictRequest := new(dictRequestsRow)
-		row.Scan(&dictRequest.date, &dictRequest.userID, &dictRequest.data)
+		var data string
+		err = row.Scan(&data)
 
-		if containsDuplicate(dictRequest.data, item) {
+		if containsDuplicate(data, item) {
 			return nil
 		}
 
-		dictRequest.data += formatDictionaryRequest(item, daysCount)
+		data += formatDictionaryRequest(item, daysCount)
 		updateRowStatement := `
 			UPDATE dict_requests
 			SET data = $1
 			WHERE user_id = $2 AND date = $3`
-		_, err = db.Exec(updateRowStatement, dictRequest.data, userID, date)
+		_, err = db.Exec(updateRowStatement, data, userID, date)
 		if err != nil {
 			return err
 		}
