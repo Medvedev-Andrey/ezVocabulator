@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 type dictRequestsRow struct {
@@ -16,7 +18,7 @@ type dictRequestsRow struct {
 }
 
 func ensureDictionaryRequestDBExists(db *sql.DB) error {
-	log.Print("Checking dictionary requests database exists")
+	log.Print("Checking dictionary requests Database exists")
 
 	createTableStatement := `
 		CREATE TABLE IF NOT EXISTS dict_requests 
@@ -99,7 +101,8 @@ func getUserRequests(db *sql.DB, userID int) ([]string, error) {
 	getUserDataStatement := `
 		SELECT data FROM dict_requests 
 		WHERE user_id = $1`
-	rows, err := db.Query(getUserDataStatement, userID)
+	var rows *sql.Rows
+	rows, err = db.Query(getUserDataStatement, userID)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
@@ -116,10 +119,13 @@ func getUserRequests(db *sql.DB, userID int) ([]string, error) {
 	re := regexp.MustCompile(`\^([^\^]*),[0-9]+`)
 	for rows.Next() {
 		var data []byte
-		err = rows.Scan(&data)
+		err = rows.Scan(pq.Array(&data))
 
 		if err != nil {
 			log.Printf("Error while acquiring user requests history from row. %q", err)
+			continue
+		} else if len(data) == 0 {
+			log.Printf("Empty user requests history for '%d'", userID)
 			continue
 		}
 

@@ -30,6 +30,7 @@ func initTelegram(botToken string) (*tgbotapi.BotAPI, error) {
 		return nil, err
 	}
 
+	log.Print("Setting up Telegram webhook")
 	url := appURL + bot.Token
 	_, err = bot.SetWebhook(tgbotapi.NewWebhook(url))
 	if err != nil {
@@ -64,6 +65,7 @@ func main() {
 		log.Fatalf("Environment variable for Database is not set")
 	}
 
+	log.Print("Setting up Database")
 	var err error
 	db, err = sql.Open("postgres", databaseUrl)
 	if err != nil {
@@ -90,9 +92,10 @@ func main() {
 			continue
 		}
 
-		if update.Message.Text == "/history" {
+		switch update.Message.Text {
+		case "/history":
 			handleHistoryRequest(update.Message)
-		} else {
+		default:
 			handleDictionaryRequest(update.Message)
 		}
 	}
