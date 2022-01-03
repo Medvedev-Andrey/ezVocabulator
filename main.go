@@ -3,10 +3,10 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	_ "github.com/lib/pq"
@@ -105,28 +105,33 @@ func handleHistoryRequest(inMessage *tgbotapi.Message) {
 	log.Printf("Handling history request from user with ID %d", inMessage.From.ID)
 
 	userRequests, err := getUserRequests(db, inMessage.From.ID)
-	if err == nil && len(userRequests) > 0 {
-		msg := tgbotapi.NewMessage(inMessage.Chat.ID, "")
+	if err != nil {
+		handleErrorWithReply(inMessage, err)
+		return
+	} else if len(userRequests) == 0 {
+		sendSimpleReply(inMessage, "Seems like you have not requested any dictionary info yet ... 😞")
+		return
+	}
+
+	file, err := ioutil.TempFile("", fmt.Sprintf("%d_user_history", inMessage.From.ID))
+	if err != nil {
+		handleErrorWithReply(inMessage, err)
+		return
+	}
+	defer os.Remove(file.Name())
+
+	for _, userRequest := range userRequests {
+		file.WriteString(userRequest + "\n")
+	}
+
+	if err != nil {
+		handleErrorWithReply(inMessage, err)
+	} else {
+		msg := tgbotapi.NewDocumentUpload(inMessage.Chat.ID, file)
 		msg.ReplyToMessageID = inMessage.MessageID
-		msg.Text = strings.Join(userRequests, ", ")
 
 		_, err := bot.Send(msg)
 		if err != nil {
-			log.Fatal(err)
-		}
-	} else {
-		var message string
-		if err != nil {
-			log.Println(err)
-			message = "Failed processing request ... 🤔"
-		} else {
-			message = "Seems like you have not requested any dictionary info yet ... 😞"
-		}
-
-		msg := tgbotapi.NewMessage(inMessage.Chat.ID, message)
-		msg.ReplyToMessageID = inMessage.MessageID
-
-		if _, err := bot.Send(msg); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -136,7 +141,11 @@ func handleDictionaryRequest(inMessage *tgbotapi.Message) {
 	log.Printf("Handling dictionary request '%s' from user with ID %d", inMessage.Text, inMessage.From.ID)
 
 	lrResponse, err := getDefinitionFromLinguaRobot(inMessage.Text)
-	if err == nil && len(lrResponse.Entries) > 0 {
+	if err != nil {
+		handleErrorWithReply(inMessage, err)
+	} else if len(lrResponse.Entries) == 0 {
+		sendSimpleReply(inMessage, "Nothing has been found ... 😞")
+	} else {
 		response := convertLinguaRobotResponse(lrResponse)
 		contents := formatUserResponse(response)
 
@@ -156,20 +165,19 @@ func handleDictionaryRequest(inMessage *tgbotapi.Message) {
 
 			messageIDToReply = sentMsg.MessageID
 		}
-	} else {
-		var message string
-		if err != nil {
-			log.Println(err)
-			message = "Failed processing request ... 🤔"
-		} else {
-			message = "Nothing has been found ... 😞"
-		}
+	}
+}
 
-		msg := tgbotapi.NewMessage(inMessage.Chat.ID, message)
-		msg.ReplyToMessageID = inMessage.MessageID
+func handleErrorWithReply(inMessage *tgbotapi.Message, err error) {
+	log.Println(err)
+	sendSimpleReply(inMessage, "Failed processing request ... 🤔")
+}
 
-		if _, err := bot.Send(msg); err != nil {
-			log.Fatal(err)
-		}
+func sendSimpleReply(inMessage *tgbotapi.Message, message string) {
+	msg := tgbotapi.NewMessage(inMessage.Chat.ID, message)
+	msg.ReplyToMessageID = inMessage.MessageID
+
+	if _, err := bot.Send(msg); err != nil {
+		log.Fatal(err)
 	}
 }

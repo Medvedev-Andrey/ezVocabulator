@@ -80,8 +80,16 @@ func storeDictionaryRequest(db *sql.DB, userID int, item string) error {
 			UPDATE dict_requests
 			SET data = $1
 			WHERE user_id = $2 AND date = $3`
-		_, err = db.Exec(updateRowStatement, data, userID, date)
+
+		var res sql.Result
+		res, err = db.Exec(updateRowStatement, data, userID, date)
 		if err != nil {
+			return err
+		}
+
+		rowsAffected, _ := res.RowsAffected()
+		if rowsAffected == 0 {
+			err = fmt.Errorf("no rows were affected by Database update")
 			return err
 		}
 	} else {
@@ -98,6 +106,7 @@ func storeDictionaryRequest(db *sql.DB, userID int, item string) error {
 		rowsAffected, _ := res.RowsAffected()
 		if rowsAffected == 0 {
 			err = fmt.Errorf("no rows were affected by Database update")
+			return err
 		}
 	}
 
