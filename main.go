@@ -113,7 +113,7 @@ func handleHistoryRequest(inMessage *tgbotapi.Message) {
 		return
 	}
 
-	file, err := ioutil.TempFile("", fmt.Sprintf("%d_user_history", inMessage.From.ID))
+	file, err := ioutil.TempFile("", fmt.Sprintf("%d_user_history.txt", inMessage.From.ID))
 	if err != nil {
 		handleErrorWithReply(inMessage, err)
 		return
@@ -121,7 +121,11 @@ func handleHistoryRequest(inMessage *tgbotapi.Message) {
 	defer os.Remove(file.Name())
 
 	for _, userRequest := range userRequests {
-		file.WriteString(userRequest + "\n")
+		_, err := file.WriteString(userRequest + "\n")
+		if err != nil {
+			handleErrorWithReply(inMessage, err)
+			return
+		}
 	}
 
 	if err != nil {
