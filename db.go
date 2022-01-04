@@ -39,14 +39,14 @@ func storeDictionaryRequest(db *sql.DB, userID int, item string) error {
 	var err error
 	defer func() {
 		if err != nil {
-			log.Printf("Failed storing dictionary request for %d user ID by %s. %s", userID, date, err)
+			log.Printf("Failed storing dictionary request for %d user ID by %s. %s", userID, date.Format("2006-01-02"), err)
 		} else {
-			log.Printf("Successfully stored dictionary request for %d user ID by %s", userID, date)
+			log.Printf("Successfully stored dictionary request for %d user ID by %s", userID, date.Format("2006-01-02"))
 		}
 	}()
 
 	var exists bool
-	log.Printf("Storing dictionary request for %d user ID by %s ...", userID, date)
+	log.Printf("Storing dictionary request for %d user ID by %s ...", userID, date.Format("2006-01-02"))
 	existsStatement := `
 		SELECT EXISTS (
 			SELECT user_id FROM dict_requests 
@@ -57,7 +57,7 @@ func storeDictionaryRequest(db *sql.DB, userID int, item string) error {
 		return err
 	}
 
-	log.Printf("Dictionary requests are present for for %d user ID by %s: %t", userID, date, exists)
+	log.Printf("Dictionary requests are present for %d user ID by %s: %t", userID, date.Format("2006-01-02"), exists)
 
 	if exists {
 		getRowStatement := `
@@ -194,7 +194,7 @@ func getUserRequestsToTrain(db *sql.DB, userID int, count int) ([]userDictionary
 
 	date := getCurrentDateTimestamp()
 
-	log.Printf("Requesting words to train for user with ID %d by %s ...", userID, date)
+	log.Printf("Requesting words to train for user with ID %d by %s ...", userID, date.Format("2006-01-02"))
 	getUserDataStatement := `
 		SELECT data FROM dict_requests 
 		WHERE user_id = $1 AND date <= $2
