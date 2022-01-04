@@ -143,7 +143,19 @@ func handleDictionaryRequest(inMessage *tgbotapi.Message) {
 		response := convertLinguaRobotResponse(lrResponse)
 		contents := formatUserResponse(response)
 
-		storeDictionaryRequest(db, inMessage.From.ID, inMessage.Text)
+		storedContent := make(map[string]bool)
+		for _, entry := range response.entries {
+			if storedContent[entry.item] {
+				continue
+			}
+
+			err = storeDictionaryRequest(db, inMessage.From.ID, entry.item)
+			if err != nil {
+				log.Println(err)
+			} else {
+				storedContent[entry.item] = true
+			}
+		}
 
 		messageIDToReply := inMessage.MessageID
 		for _, content := range contents {
