@@ -94,11 +94,8 @@ func main() {
 			continue
 		}
 
-		if update.InlineQuery != nil {
-			if strings.HasPrefix(update.Message.Text, StoreDictionaryRequestPrefix) {
-				handleStoreDictionaryQuery(update.InlineQuery)
-			}
-
+		if strings.HasPrefix(update.Message.Text, StoreDictionaryRequestPrefix) {
+			handleStoreDictionaryQuery(update.Message)
 			continue
 		}
 
@@ -111,23 +108,12 @@ func main() {
 	}
 }
 
-func handleStoreDictionaryQuery(inlineQuery *tgbotapi.InlineQuery) {
-	log.Printf("Handling storing history request from user with ID %d", inlineQuery.From.ID)
+func handleStoreDictionaryQuery(inMessage *tgbotapi.Message) {
+	log.Printf("Handling storing history request from user with ID %d", inMessage.From.ID)
 
-	if _, ok := queryToLexemeDefinitions[inlineQuery.Query]; !ok {
-		article := tgbotapi.NewInlineQueryResultArticle(inlineQuery.ID, "Echo", inlineQuery.Query)
-
-		inline := tgbotapi.InlineConfig{
-			InlineQueryID: inlineQuery.ID,
-			IsPersonal:    true,
-			CacheTime:     0,
-			Results:       []interface{}{article},
-		}
-
-		_, err := bot.AnswerInlineQuery(inline)
-		if err != nil {
-			log.Fatal(err)
-		}
+	if _, ok := queryToLexemeDefinitions[inMessage.Text]; !ok {
+		sendSimpleReply(inMessage, "Cannot find corresponding dictionary request ... 😞")
+		return
 	}
 
 	//err = storeDictionaryRequest(db, inMessage.From.ID, entry.item)
