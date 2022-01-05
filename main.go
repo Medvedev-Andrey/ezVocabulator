@@ -109,7 +109,7 @@ func handleTestAsk(inMessage *tgbotapi.Message) {
 	msg := tgbotapi.NewMessage(inMessage.Chat.ID, "")
 	msg.ReplyToMessageID = inMessage.MessageID
 	msg.ParseMode = "HTML"
-	msg.Text = "Click this! > <a href=\"/test-query\">inline query</a>"
+	msg.Text = "Click this! > <a href=\"tg://msg?=</test-query>\">inline query</a>"
 
 	_, err := bot.Send(msg)
 	if err != nil {
