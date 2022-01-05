@@ -95,9 +95,25 @@ func main() {
 		switch update.Message.Text {
 		case "/history":
 			handleHistoryRequest(update.Message)
+		case "/test-ask":
+			handleTestAsk(update.Message)
+		case "/test-query":
+			sendSimpleReply(update.Message, "YES!")
 		default:
 			handleDictionaryRequest(update.Message)
 		}
+	}
+}
+
+func handleTestAsk(inMessage *tgbotapi.Message) {
+	msg := tgbotapi.NewMessage(inMessage.Chat.ID, "")
+	msg.ReplyToMessageID = inMessage.MessageID
+	msg.ParseMode = "HTML"
+	msg.Text = "Click this! > <a href=\"/test-query\">inline query</a>"
+
+	_, err := bot.Send(msg)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
