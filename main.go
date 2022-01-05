@@ -141,7 +141,7 @@ func handleDictionaryRequest(inMessage *tgbotapi.Message) {
 		sendSimpleReply(inMessage, "Nothing has been found ... 😞")
 	} else {
 		response := convertLinguaRobotResponse(lrResponse)
-		contents := formatUserResponse(response)
+		responseContents := formatUserResponse(response)
 
 		storedContent := make(map[string]bool)
 		for _, entry := range response.entries {
@@ -158,11 +158,11 @@ func handleDictionaryRequest(inMessage *tgbotapi.Message) {
 		}
 
 		messageIDToReply := inMessage.MessageID
-		for _, content := range contents {
+		for _, responseContent := range responseContents {
 			msg := tgbotapi.NewMessage(inMessage.Chat.ID, "")
 			msg.ReplyToMessageID = messageIDToReply
 			msg.ParseMode = "HTML"
-			msg.Text = content
+			msg.Text = responseContent.content
 
 			sentMsg, err := bot.Send(msg)
 			if err != nil {

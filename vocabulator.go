@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"strings"
 )
@@ -40,30 +41,53 @@ const (
 	maxContentLength = 4096
 )
 
-type response struct {
-	contents []string
+type responseContent struct {
+	content      string
+	storeQueries map[string]lexemeDefinition
 }
 
-func (response *response) append(builder *strings.Builder, content string) {
-	if builder.Len()+len(content) < maxContentLength {
-		builder.WriteString(content)
-	} else {
-		response.contents = append(response.contents, builder.String())
-		builder.Reset()
-		builder.WriteString(content)
+type responseBuilder struct {
+	contents    []responseContent
+	lastContent responseContent
+}
+
+func (builder *responseBuilder) append(strBuilder *strings.Builder, contentPart string) {
+	if !builder.canAppend(strBuilder, contentPart) {
+		builder.lastContent.content = strBuilder.String()
+		builder.contents = append(builder.contents, builder.lastContent)
+
+		builder.lastContent = responseContent{}
+		strBuilder.Reset()
 	}
+
+	strBuilder.WriteString(contentPart)
 }
 
-func (response *response) finish(builder *strings.Builder) {
-	response.contents = append(response.contents, builder.String())
+func (builder *responseBuilder) appendWithQuery(strBuilder *strings.Builder, contentPart string, query string, defToStore lexemeDefinition) {
+	builder.append(strBuilder, contentPart)
+	builder.lastContent.storeQueries[query] = defToStore
 }
 
-func formatUserResponse(dictionaryResponse *dictionaryResponse) []string {
+func (builder *responseBuilder) canAppend(strBuilder *strings.Builder, contentPart string) bool {
+	return strBuilder.Len()+len(contentPart) < maxContentLength
+}
+
+func (builder *responseBuilder) finish(strBuilder *strings.Builder) {
+	builder.lastContent.content = strBuilder.String()
+	builder.contents = append(builder.contents, builder.lastContent)
+}
+
+type formattedDictionaryResponse struct {
+	textContents              []string
+	commandToLexemeDefinition map[string]lexemeDefinition
+}
+
+func formatUserResponse(dictionaryResponse *dictionaryResponse) []responseContent {
 	var sb strings.Builder
-	var response response
+	var builder responseBuilder
 
 	for _, item := range dictionaryResponse.entries {
-		response.append(&sb, fmt.Sprintf("▫️%s\n", item.item))
+		builder.append(&sb, fmt.Sprintf("▫️%s\n", item.item))
 
 		for _, pronunciation := range item.pronunciations {
 			var pronunciationSb strings.Builder
@@ -83,27 +107,28 @@ func formatUserResponse(dictionaryResponse *dictionaryResponse) []string {
 			}
 
 			pronunciationSb.WriteRune('\n')
-			response.append(&sb, pronunciationSb.String())
+			builder.append(&sb, pronunciationSb.String())
 		}
 
-		response.append(&sb, "\n")
+		builder.append(&sb, "\n")
 
 		for _, lexeme := range item.lexemes {
-			response.append(&sb, fmt.Sprintf("<u>%s (<i>%s</i>)</u>\n", lexeme.lemma, lexeme.partOfSpeech))
+			builder.append(&sb, fmt.Sprintf("<u>%s (<i>%s</i>)</u>\n", lexeme.lemma, lexeme.partOfSpeech))
 
 			for i, sense := range lexeme.definitions {
 				if i >= maxSenses {
 					break
 				}
 
-				response.append(&sb, fmt.Sprintf("\n<b>def</b> %s\n", sense.definition))
+				storeQuery := generateStoreLexemeDefinitionQuery()
+				builder.append(&sb, fmt.Sprintf("\n<b>def</b> %s <i>Store? %s</i>\n", sense.definition, storeQuery))
 
 				if len(sense.antonyms) > 0 {
-					response.append(&sb, fmt.Sprintf("<b>ant</b> %s\n", strings.Join(sense.antonyms, ", ")))
+					builder.append(&sb, fmt.Sprintf("<b>ant</b> %s\n", strings.Join(sense.antonyms, ", ")))
 				}
 
 				if len(sense.synonyms) > 0 {
-					response.append(&sb, fmt.Sprintf("<b>syn</b> %s\n", strings.Join(sense.synonyms, ", ")))
+					builder.append(&sb, fmt.Sprintf("<b>syn</b> %s\n", strings.Join(sense.synonyms, ", ")))
 				}
 
 				if len(sense.examples) > 0 {
@@ -112,17 +137,17 @@ func formatUserResponse(dictionaryResponse *dictionaryResponse) []string {
 							break
 						}
 
-						response.append(&sb, fmt.Sprintf("<b>ex</b> %s\n", example))
+						builder.append(&sb, fmt.Sprintf("<b>ex</b> %s\n", example))
 					}
 				}
 			}
 
-			response.append(&sb, "\n")
+			builder.append(&sb, "\n")
 		}
 	}
 
-	response.finish(&sb)
-	return response.contents
+	builder.finish(&sb)
+	return builder.contents
 }
 
 func processRequest(request *http.Request) ([]byte, error) {
@@ -141,4 +166,19 @@ func processRequest(request *http.Request) ([]byte, error) {
 	}
 
 	return contents, nil
+}
+
+func generateStoreLexemeDefinitionQuery() string {
+	return fmt.Sprintf("/slm_%s", RandStringBytes(6))
+}
+
+const strContent = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+func RandStringBytes(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = strContent[rand.Intn(len(strContent))]
+	}
+
+	return string(b)
 }
