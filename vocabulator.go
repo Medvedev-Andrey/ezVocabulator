@@ -38,7 +38,8 @@ type lexemeDefinition struct {
 }
 
 const (
-	maxContentLength = 4096
+	maxContentLength             = 4096
+	StoreDictionaryRequestPrefix = "/slm"
 )
 
 type responseContent struct {
@@ -169,7 +170,7 @@ func processRequest(request *http.Request) ([]byte, error) {
 }
 
 func generateStoreLexemeDefinitionQuery() string {
-	return fmt.Sprintf("/slm_%s", RandStringBytes(6))
+	return fmt.Sprintf("%s_%s", StoreDictionaryRequestPrefix, RandStringBytes(6))
 }
 
 const strContent = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"

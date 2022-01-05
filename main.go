@@ -15,6 +15,8 @@ import (
 var (
 	bot *tgbotapi.BotAPI
 	db  *sql.DB
+
+	queryToLexemeDefinitions map[string]lexemeDefinition
 )
 
 const (
@@ -92,6 +94,14 @@ func main() {
 			continue
 		}
 
+		if update.InlineQuery != nil {
+			if strings.HasPrefix(update.Message.Text, StoreDictionaryRequestPrefix) {
+				handleStoreDictionaryQuery(update.InlineQuery)
+			}
+
+			continue
+		}
+
 		switch update.Message.Text {
 		case "/history":
 			handleHistoryRequest(update.Message)
@@ -99,6 +109,33 @@ func main() {
 			handleDictionaryRequest(update.Message)
 		}
 	}
+}
+
+func handleStoreDictionaryQuery(inlineQuery *tgbotapi.InlineQuery) {
+	log.Printf("Handling storing history request from user with ID %d", inlineQuery.From.ID)
+
+	if _, ok := queryToLexemeDefinitions[inlineQuery.Query]; !ok {
+		article := tgbotapi.NewInlineQueryResultArticle(inlineQuery.ID, "Echo", inlineQuery.Query)
+
+		inline := tgbotapi.InlineConfig{
+			InlineQueryID: inlineQuery.ID,
+			IsPersonal:    true,
+			CacheTime:     0,
+			Results:       []interface{}{article},
+		}
+
+		_, err := bot.AnswerInlineQuery(inline)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	//err = storeDictionaryRequest(db, inMessage.From.ID, entry.item)
+	//if err != nil {
+	//	log.Println(err)
+	//} else {
+	//	storedContent[entry.item] = true
+	//}
 }
 
 func handleHistoryRequest(inMessage *tgbotapi.Message) {
