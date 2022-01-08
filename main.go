@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	_ "github.com/lib/pq"
@@ -16,11 +18,13 @@ var (
 	bot *tgbotapi.BotAPI
 	db  *sql.DB
 
-	queryToLexemeDefinitions map[string]lexemeDefinition
+	queryToTrainingData map[string]trainingData
+	lastInputTimestamp  time.Time
 )
 
 const (
-	appURL = "https://ezvocabulator.herokuapp.com/"
+	queryCacheHoursLifeSpan = 1
+	appURL                  = "https://ezvocabulator.herokuapp.com/"
 )
 
 func initTelegram(botToken string) (*tgbotapi.BotAPI, error) {
@@ -74,7 +78,7 @@ func main() {
 		log.Fatalf("Error opening database: %q", err)
 	}
 
-	err = ensureDictionaryRequestDBExists(db)
+	err = ensureTrainingTableExists(db)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -94,6 +98,9 @@ func main() {
 			continue
 		}
 
+		clearQueryCacheIfNeeded()
+		lastInputTimestamp = time.Now()
+
 		if strings.HasPrefix(update.Message.Text, StoreDictionaryRequestPrefix) {
 			handleStoreDictionaryQuery(update.Message)
 			continue
@@ -101,99 +108,102 @@ func main() {
 
 		switch update.Message.Text {
 		case "/history":
-			handleHistoryRequest(update.Message)
+			handleUserTrainingDataRequest(update.Message)
 		default:
 			handleDictionaryRequest(update.Message)
 		}
 	}
 }
 
-func handleStoreDictionaryQuery(inMessage *tgbotapi.Message) {
-	log.Printf("Handling storing history request from user with ID %d", inMessage.From.ID)
+func clearQueryCacheIfNeeded() {
+	if time.Since(lastInputTimestamp).Hours() > queryCacheHoursLifeSpan {
+		for k := range queryToTrainingData {
+			delete(queryToTrainingData, k)
+		}
+	}
+}
 
-	if _, ok := queryToLexemeDefinitions[inMessage.Text]; !ok {
+func handleStoreDictionaryQuery(inMessage *tgbotapi.Message) {
+	trainingData, ok := queryToTrainingData[inMessage.Text]
+	if !ok {
 		sendSimpleReply(inMessage, "Cannot find corresponding dictionary request ... 😞")
 		return
 	}
 
-	//err = storeDictionaryRequest(db, inMessage.From.ID, entry.item)
-	//if err != nil {
-	//	log.Println(err)
-	//} else {
-	//	storedContent[entry.item] = true
-	//}
-}
-
-func handleHistoryRequest(inMessage *tgbotapi.Message) {
-	log.Printf("Handling history request from user with ID %d", inMessage.From.ID)
-
-	userRequests, err := getUserRequests(db, inMessage.From.ID)
-	if err != nil {
-		handleErrorWithReply(inMessage, err)
-		return
-	} else if len(userRequests) == 0 {
-		sendSimpleReply(inMessage, "Seems like you have not requested any dictionary info yet ... 😞")
-		return
-	}
-
+	err := storeTrainingData(db, inMessage.From.ID, &trainingData)
 	if err != nil {
 		handleErrorWithReply(inMessage, err)
 	} else {
-		file := tgbotapi.FileBytes{
-			Name:  "user_history.txt",
-			Bytes: []byte(strings.Join(userRequests, "\n")),
-		}
+		sendSimpleReply(inMessage, "Stored '%s' definition ✅")
+		delete(queryToTrainingData, inMessage.Text)
+	}
+}
 
-		msg := tgbotapi.NewDocumentUpload(inMessage.Chat.ID, file)
-		msg.ReplyToMessageID = inMessage.MessageID
+func handleUserTrainingDataRequest(inMessage *tgbotapi.Message) {
+	userDataCount, err := countUserTrainingData(db, inMessage.From.ID)
+	if err != nil {
+		handleErrorWithReply(inMessage, err)
+		return
+	}
 
-		_, err := bot.Send(msg)
-		if err != nil {
-			log.Fatal(err)
-		}
+	userTrainingData, err := getUserDataToTrain(db, inMessage.From.ID, userDataCount)
+	if err != nil {
+		handleErrorWithReply(inMessage, err)
+		return
+	} else if len(userTrainingData) == 0 {
+		sendSimpleReply(inMessage, "Seems like you have no training data yet ... 😞")
+		return
+	}
+
+	var buf bytes.Buffer
+	for i, trainingItem := range userTrainingData {
+		buf.WriteString(fmt.Sprintf("[%d] %s: %s\n", i, trainingItem.Item, trainingItem.ItemData.Definition))
+	}
+
+	file := tgbotapi.FileBytes{
+		Name:  "training_set.txt",
+		Bytes: buf.Bytes(),
+	}
+
+	msg := tgbotapi.NewDocumentUpload(inMessage.Chat.ID, file)
+	msg.ReplyToMessageID = inMessage.MessageID
+
+	_, err = bot.Send(msg)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
 func handleDictionaryRequest(inMessage *tgbotapi.Message) {
-	log.Printf("Handling dictionary request '%s' from user with ID %d", inMessage.Text, inMessage.From.ID)
-
 	lrResponse, err := getDefinitionFromLinguaRobot(inMessage.Text)
 	if err != nil {
 		handleErrorWithReply(inMessage, err)
+		return
 	} else if len(lrResponse.Entries) == 0 {
 		sendSimpleReply(inMessage, "Nothing has been found ... 😞")
-	} else {
-		response := convertLinguaRobotResponse(lrResponse)
-		responseContents := formatUserResponse(response)
+		return
+	}
 
-		storedContent := make(map[string]bool)
-		for _, entry := range response.entries {
-			if storedContent[entry.item] {
-				continue
-			}
+	response := convertLinguaRobotResponse(lrResponse)
+	responseContents := formatUserResponse(response)
 
-			err = storeDictionaryRequest(db, inMessage.From.ID, entry.item)
-			if err != nil {
-				log.Println(err)
-			} else {
-				storedContent[entry.item] = true
-			}
+	messageIDToReply := inMessage.MessageID
+	for _, responseContent := range responseContents {
+		msg := tgbotapi.NewMessage(inMessage.Chat.ID, "")
+		msg.ReplyToMessageID = messageIDToReply
+		msg.ParseMode = "HTML"
+		msg.Text = responseContent.content
+
+		sentMsg, err := bot.Send(msg)
+		if err != nil {
+			log.Fatal(err)
 		}
 
-		messageIDToReply := inMessage.MessageID
-		for _, responseContent := range responseContents {
-			msg := tgbotapi.NewMessage(inMessage.Chat.ID, "")
-			msg.ReplyToMessageID = messageIDToReply
-			msg.ParseMode = "HTML"
-			msg.Text = responseContent.content
-
-			sentMsg, err := bot.Send(msg)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			messageIDToReply = sentMsg.MessageID
+		for query, trainingData := range responseContent.storeQueries {
+			queryToTrainingData[query] = trainingData
 		}
+
+		messageIDToReply = sentMsg.MessageID
 	}
 }
 

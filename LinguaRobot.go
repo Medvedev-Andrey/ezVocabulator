@@ -119,14 +119,14 @@ func convertLinguaRobotResponse(lrResponse *linguaRobotResponse) *dictionaryResp
 			lexeme.partOfSpeech = lrLexeme.PartOfSpeech
 
 			for _, lrSense := range lrLexeme.Senses {
-				var definition lexemeDefinition
+				var itemData dictionaryItemData
 
-				definition.definition = lrSense.Definition
-				definition.antonyms = lrSense.Antonyms
-				definition.synonyms = lrSense.Synonyms
-				definition.examples = lrSense.Examples
+				itemData.Definition = lrSense.Definition
+				itemData.Antonyms = lrSense.Antonyms
+				itemData.Synonyms = lrSense.Synonyms
+				itemData.Examples = lrSense.Examples
 
-				lexeme.definitions = append(lexeme.definitions, definition)
+				lexeme.definitions = append(lexeme.definitions, itemData)
 			}
 
 			entry.lexemes = append(entry.lexemes, lexeme)
