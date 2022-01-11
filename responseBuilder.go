@@ -117,6 +117,11 @@ func (builder *responseBuilder) append(strBuilder *strings.Builder, contentPart 
 
 func (builder *responseBuilder) appendWithQuery(strBuilder *strings.Builder, contentPart string, query string, data trainingData) {
 	builder.append(strBuilder, contentPart)
+
+	if builder.lastContent.storeQueries == nil {
+		builder.lastContent.storeQueries = map[string]trainingData{}
+	}
+
 	builder.lastContent.storeQueries[query] = data
 }
 

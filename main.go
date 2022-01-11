@@ -199,8 +199,10 @@ func handleDictionaryRequest(inMessage *tgbotapi.Message) {
 			log.Fatal(err)
 		}
 
-		for query, trainingData := range responseContent.storeQueries {
-			queryToTrainingData[query] = trainingData
+		if responseContent.storeQueries != nil {
+			for query, trainingData := range responseContent.storeQueries {
+				queryToTrainingData[query] = trainingData
+			}
 		}
 
 		messageIDToReply = sentMsg.MessageID
