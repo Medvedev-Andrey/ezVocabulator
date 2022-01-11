@@ -18,8 +18,8 @@ var (
 	bot *tgbotapi.BotAPI
 	db  *sql.DB
 
-	queryToTrainingData map[string]trainingData
-	lastInputTimestamp  time.Time
+	queryToTrainingData map[string]trainingData = map[string]trainingData{}
+	lastInputTimestamp  time.Time               = time.Now()
 )
 
 const (
