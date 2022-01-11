@@ -89,12 +89,12 @@ func formatUserResponse(dictionaryResponse *dictionaryResponse) []responseConten
 }
 
 func generateStoreLexemeDefinitionQuery() string {
-	return fmt.Sprintf("%s_%s", StoreDictionaryRequestPrefix, RandStringBytes(6))
+	return fmt.Sprintf("%s_%s", StoreDictionaryRequestPrefix, randStringBytes(6))
 }
 
 const strContent = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-func RandStringBytes(n int) string {
+func randStringBytes(n int) string {
 	b := make([]byte, n)
 	for i := range b {
 		b[i] = strContent[rand.Intn(len(strContent))]
