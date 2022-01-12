@@ -10,6 +10,10 @@ import (
 	"strings"
 )
 
+var (
+	linguaRobotApiToken string
+)
+
 const (
 	linguaRobotRequestFormat = "https://lingua-robot.p.rapidapi.com/language/v1/entries/en/%s"
 	linguaRobotApiHost       = "lingua-robot.p.rapidapi.com"
@@ -60,9 +64,9 @@ type linguaRobotSense struct {
 }
 
 func getDefinitionFromLinguaRobot(item string) (*linguaRobotResponse, error) {
-	if apiToken == "" {
-		apiToken = os.Getenv("LINGUA_ROBOT_API_TOKEN")
-		if apiToken == "" {
+	if linguaRobotApiToken == "" {
+		linguaRobotApiToken = os.Getenv("LINGUA_ROBOT_API_TOKEN")
+		if linguaRobotApiToken == "" {
 			log.Fatalf("Environment variable for Lingua Robot is not set")
 			return nil, fmt.Errorf("Empty Lingua Robot API token")
 		}
@@ -72,7 +76,7 @@ func getDefinitionFromLinguaRobot(item string) (*linguaRobotResponse, error) {
 	requestUrl := fmt.Sprintf(linguaRobotRequestFormat, url.PathEscape(item))
 	request, _ := http.NewRequest("GET", requestUrl, nil)
 	request.Header.Add("x-rapidapi-host", linguaRobotApiHost)
-	request.Header.Add("x-rapidapi-key", apiToken)
+	request.Header.Add("x-rapidapi-key", linguaRobotApiToken)
 
 	contents, err := processRequest(request)
 	if err != nil {
