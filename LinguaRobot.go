@@ -17,8 +17,6 @@ var (
 const (
 	linguaRobotRequestFormat = "https://lingua-robot.p.rapidapi.com/language/v1/entries/en/%s"
 	linguaRobotApiHost       = "lingua-robot.p.rapidapi.com"
-	maxExamples              = 3
-	maxSenses                = 5
 )
 
 type linguaRobotResponse struct {

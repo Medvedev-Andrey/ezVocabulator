@@ -49,11 +49,7 @@ func formatUserResponse(dictionaryResponse *dictionaryResponse) []responseConten
 		for _, lexeme := range item.lexemes {
 			builder.append(&sb, fmt.Sprintf("<u>%s (<i>%s</i>)</u>\n", lexeme.lemma, lexeme.partOfSpeech))
 
-			for i, sense := range lexeme.definitions {
-				if i >= maxSenses {
-					break
-				}
-
+			for _, sense := range lexeme.definitions {
 				dataToTrain := trainingData{
 					Iteration: 1,
 					Item:      lexeme.lemma,
@@ -71,11 +67,7 @@ func formatUserResponse(dictionaryResponse *dictionaryResponse) []responseConten
 					builder.append(&sb, fmt.Sprintf("<b>syn</b> %s\n", strings.Join(sense.Synonyms, ", ")))
 				}
 
-				for j, example := range sense.Examples {
-					if j >= maxExamples {
-						break
-					}
-
+				for _, example := range sense.Examples {
 					builder.append(&sb, fmt.Sprintf("<b>ex</b> %s\n", example))
 				}
 			}
