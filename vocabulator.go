@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	maxContentLength             = 4096
-	StoreDictionaryRequestPrefix = "/slm"
+	maxContentLength        = 4096
+	StoreTrainingDataPrefix = "/std"
 )
 
 type dictionaryResponse struct {

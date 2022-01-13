@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	_ "github.com/lib/pq"
@@ -17,9 +16,6 @@ import (
 var (
 	bot *tgbotapi.BotAPI
 	db  *sql.DB
-
-	queryToTrainingData map[string]trainingData = map[string]trainingData{}
-	lastInputTimestamp  time.Time               = time.Now()
 )
 
 const (
@@ -98,11 +94,8 @@ func main() {
 			continue
 		}
 
-		clearQueryCacheIfNeeded()
-		lastInputTimestamp = time.Now()
-
-		if strings.HasPrefix(update.Message.Text, StoreDictionaryRequestPrefix) {
-			handleStoreDictionaryQuery(update.Message)
+		if strings.HasPrefix(update.Message.Text, StoreTrainingDataPrefix) {
+			handleStoreTrainingDataQuery(update.Message)
 			continue
 		}
 
@@ -115,26 +108,18 @@ func main() {
 	}
 }
 
-func clearQueryCacheIfNeeded() {
-	if time.Since(lastInputTimestamp).Hours() > queryCacheHoursLifeSpan {
-		for k := range queryToTrainingData {
-			delete(queryToTrainingData, k)
-		}
-	}
-}
-
-func handleStoreDictionaryQuery(inMessage *tgbotapi.Message) {
-	trainingData, ok := queryToTrainingData[inMessage.Text]
-	if !ok {
-		sendSimpleReply(inMessage, "Cannot find corresponding dictionary request ... 😞")
+func handleStoreTrainingDataQuery(inMessage *tgbotapi.Message) {
+	trainingData, err := getTrainingData(inMessage.Text)
+	if err != nil {
+		sendSimpleReply(inMessage, "Cannot find corresponding dictionary request ... 😞\nThe request cache may be outdated. Try requesting it again ... I'll definetely find the word and store definitions for later! 🥺")
 		return
 	}
 
-	err := storeTrainingData(db, inMessage.From.ID, &trainingData)
+	err = storeTrainingData(db, inMessage.From.ID, trainingData)
 	if err != nil {
 		handleErrorWithReply(inMessage, err)
 	} else {
-		sendSimpleReply(inMessage, "Stored '%s' definition ✅")
+		sendSimpleReply(inMessage, fmt.Sprintf("Stored '%s' ✅", trainingData.Item))
 		delete(queryToTrainingData, inMessage.Text)
 	}
 }
@@ -199,12 +184,7 @@ func handleDictionaryRequest(inMessage *tgbotapi.Message) {
 			log.Fatal(err)
 		}
 
-		if responseContent.storeQueries != nil {
-			for query, trainingData := range responseContent.storeQueries {
-				queryToTrainingData[query] = trainingData
-			}
-		}
-
+		cacheTrainingDataSet(responseContent.storeQueries)
 		messageIDToReply = sentMsg.MessageID
 	}
 }
