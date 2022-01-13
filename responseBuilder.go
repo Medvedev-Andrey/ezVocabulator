@@ -89,7 +89,7 @@ func formatUserResponse(dictionaryResponse *dictionaryResponse) []responseConten
 }
 
 func generateStoreLexemeDefinitionQuery() string {
-	return fmt.Sprintf("%s_%s", StoreDictionaryRequestPrefix, randStringBytes(6))
+	return fmt.Sprintf("%s_%s", StoreTrainingDataPrefix, randStringBytes(6))
 }
 
 const strContent = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
