@@ -1,2 +1,5 @@
 # Ignore environment variables storages
 *.env
+
+# Ignore VS Code data
+.vscode/*
