@@ -52,6 +52,9 @@ func initTelegram(botToken string) (*tgbotapi.BotAPI, error) {
 }
 
 func main() {
+	x, _ := getDefinitionFromMWDictionary("test")
+	splitResponseContents(convertMWDictionaryResponse(x).content, maxContentLength, '\n')
+
 	botToken := os.Getenv("TELEGRAM_API_TOKEN")
 	if botToken == "" {
 		log.Fatalf("Environment variable for Telegram API is not set")

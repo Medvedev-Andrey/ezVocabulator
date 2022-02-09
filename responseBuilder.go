@@ -61,7 +61,7 @@ func splitResponseContents(responseContent string, partMaxLength int, splitRune 
 	for len(response) > 0 {
 		end := partMaxLength - 1
 
-		if partMaxLength < len(response) {
+		if len(response) < partMaxLength {
 			end = len(response) - 1
 		}
 
@@ -72,14 +72,14 @@ func splitResponseContents(responseContent string, partMaxLength int, splitRune 
 		}
 
 		responseContentParts = append(responseContentParts, string(contentPart[:partEnd+1]))
-		response = response[partEnd:]
+		response = response[partEnd+1:]
 	}
 
 	return responseContentParts
 }
 
 func findLastRune(arr []rune, item rune) int {
-	for i := len(arr); i >= 0; i-- {
+	for i := len(arr) - 1; i >= 0; i-- {
 		if arr[i] == item {
 			return i
 		}
