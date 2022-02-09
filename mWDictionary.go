@@ -465,24 +465,24 @@ func convertMWDictionaryResponse(mWResponse *mWDictionaryResponse) *responseCont
 
 			for _, senseSection := range defenitionSection.SenseSequence.Items {
 				if senseSection.BindingSubstitution != nil {
-					builder.append(formatMWSense(0, senseSection.BindingSubstitution.Sense))
+					builder.append(formatMWSense(senseSection.BindingSubstitution.Sense))
 					builder.append("\n")
 				}
 
 				for _, parenthesizedSenseSeqense := range senseSection.ParenthesizedSenseSequences {
 					if parenthesizedSenseSeqense.BindingSubstitution != nil {
-						builder.append(formatMWSense(0, parenthesizedSenseSeqense.BindingSubstitution.Sense))
+						builder.append(formatMWSense(parenthesizedSenseSeqense.BindingSubstitution.Sense))
 						builder.append("\n")
 					}
 
 					for _, sense := range parenthesizedSenseSeqense.Senses {
-						builder.append(formatMWSense(2, sense))
+						builder.append(formatMWSense(sense))
 						builder.append("\n")
 					}
 				}
 
 				for _, sense := range senseSection.Senses {
-					builder.append(formatMWSense(0, sense))
+					builder.append(formatMWSense(sense))
 					builder.append("\n")
 				}
 			}
@@ -530,49 +530,49 @@ func formatMWPronunciations(pronunciations []mWPronunciation) string {
 	return sb.String()
 }
 
-func formatMWSense(indent int, sense mWSense) string {
+func formatMWSense(sense mWSense) string {
 	var sb strings.Builder
 
 	if sense.SenseOrder != "" {
-		sb.WriteString(fmt.Sprintf("%s<b>%s</b>", strings.Repeat(" ", indent), sense.SenseOrder))
+		sb.WriteString(fmt.Sprintf("<b>%s</b>", sense.SenseOrder))
 	}
 
-	sb.WriteString(formatMWDefiningText(indent+len(sense.SenseOrder), sense.DefiningText))
+	sb.WriteString(formatMWDefiningText(sense.DefiningText))
 
 	if sense.DividedSense != nil {
-		definingText := formatMWDefiningText(indent+len(sense.SenseOrder), sense.DividedSense.DefinitionText)
-		sb.WriteString(fmt.Sprintf("\n%s<i>%s</i>%s", strings.Repeat(" ", indent+len(sense.SenseOrder)), sense.DividedSense.SenseDivider, definingText))
+		definingText := formatMWDefiningText(sense.DividedSense.DefinitionText)
+		sb.WriteString(fmt.Sprintf("\n<i>%s</i>%s", sense.DividedSense.SenseDivider, definingText))
 	}
 
 	return sb.String()
 }
 
-func formatMWDefiningText(indent int, definingText mWDefiningText) string {
+func formatMWDefiningText(definingText mWDefiningText) string {
 	var sb strings.Builder
 	sb.WriteString(definingText.Text)
 
 	for _, usageNote := range definingText.UsageNotes {
 		if usageNote.Text != "" {
-			sb.WriteString(fmt.Sprintf("\n%s— %s", strings.Repeat(" ", indent), usageNote.Text))
+			sb.WriteString(fmt.Sprintf("— %s", usageNote.Text))
 		}
 
 		for _, usageNoteExample := range usageNote.Examples {
 			if usageNoteExample.Text != "" {
-				sb.WriteString(fmt.Sprintf("\n%s// %s", strings.Repeat(" ", indent), usageNoteExample.Text))
+				sb.WriteString(fmt.Sprintf("\n// %s", usageNoteExample.Text))
 			}
 		}
 	}
 
 	if definingText.InfoNotes != nil {
-		sb.WriteString(fmt.Sprintf("\n%s— %s", strings.Repeat(" ", indent), definingText.InfoNotes.Text))
+		sb.WriteString(fmt.Sprintf("— %s", definingText.InfoNotes.Text))
 		for _, example := range definingText.InfoNotes.Examples {
-			sb.WriteString(fmt.Sprintf("\n%s// %s", strings.Repeat(" ", indent), example.Text))
+			sb.WriteString(fmt.Sprintf("\n// %s", example.Text))
 		}
 	}
 
 	for _, example := range definingText.Examples {
 		if example.Text != "" {
-			sb.WriteString(fmt.Sprintf("\n%s// %s", strings.Repeat(" ", indent), example.Text))
+			sb.WriteString(fmt.Sprintf("\n// %s", example.Text))
 		}
 	}
 
