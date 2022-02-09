@@ -437,8 +437,15 @@ func getDefinitionFromMWDictionary(item string) (*mWDictionaryResponse, error) {
 func convertMWDictionaryResponse(mWResponse *mWDictionaryResponse) *responseContent {
 	var builder responseBuilder
 
+	isFirst := true
 	for _, mWEntry := range mWResponse.Entries {
-		builder.append(fmt.Sprintf("▫️%s", mWEntry.HeadwordInfo.Headword))
+		if isFirst {
+			isFirst = false
+		} else {
+			builder.append("\n")
+		}
+
+		builder.append(fmt.Sprintf("  ▫️%s", mWEntry.HeadwordInfo.Headword))
 		if mWEntry.PartOfSpeech != "" {
 			builder.append(fmt.Sprintf(" (%s)\n", mWEntry.PartOfSpeech))
 		} else {
