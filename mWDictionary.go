@@ -445,9 +445,9 @@ func convertMWDictionaryResponse(mWResponse *mWDictionaryResponse) *responseCont
 			builder.append("\n")
 		}
 
-		builder.append(fmt.Sprintf("  ▫️%s", mWEntry.HeadwordInfo.Headword))
+		builder.append(fmt.Sprintf("▫️%s", mWEntry.HeadwordInfo.Headword))
 		if mWEntry.PartOfSpeech != "" {
-			builder.append(fmt.Sprintf(" (%s)\n", mWEntry.PartOfSpeech))
+			builder.append(fmt.Sprintf(" <code>%s</code>\n", mWEntry.PartOfSpeech))
 		} else {
 			builder.append("\n")
 		}
