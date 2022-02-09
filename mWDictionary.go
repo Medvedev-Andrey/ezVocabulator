@@ -21,6 +21,10 @@ const (
 	mWAudioLinkFormat = "https://media.merriam-webster.com/audio/prons/en/us/mp3/%s/%s.mp3"
 )
 
+type mWDictionaryResponse struct {
+	Entries []mWEntry
+}
+
 type mWEntry struct {
 	Meta               mWEntryMeta            `json:"meta"`
 	HeadwordInfo       mWHeadwordInfo         `json:"hwi"`
@@ -50,7 +54,7 @@ type mWHeadwordInfo struct {
 }
 
 type mWPronunciation struct {
-	MWTrancription         string  `json:"mw"`
+	Transcription          string  `json:"mw"`
 	Audio                  mWAudio `json:"sound"`
 	PreLabel               string  `json:"l"`
 	PostLabel              string  `json:"l2"`
@@ -64,6 +68,7 @@ type mWAudio struct {
 type mWDefinitionsSection struct {
 	SubjectLabels mWSenseStatusLabels `json:"sls"`
 	SenseSequence mWSensesSequence    `json:"sseq"`
+	VerbDivider   string              `json:"vd"`
 }
 
 type mWSenseStatusLabels struct {
@@ -95,7 +100,7 @@ type mWSensesSequence struct {
 }
 
 type mWSensesSequenceItem struct {
-	BindingSubstitution         mWBindingSubstitution
+	BindingSubstitution         *mWBindingSubstitution
 	ParenthesizedSenseSequences []mWParenthesizedSenseSequence
 	Senses                      []mWSense
 }
@@ -138,7 +143,7 @@ func (s *mWSensesSequence) UnmarshalJSON(data []byte) error {
 				var bindingSubstitution mWBindingSubstitution
 				err = json.Unmarshal(*itemParts[1], &bindingSubstitution)
 				if err == nil {
-					sensesSequenceItem.BindingSubstitution = bindingSubstitution
+					sensesSequenceItem.BindingSubstitution = &bindingSubstitution
 				}
 			case sectionName == "sense":
 				var sense mWSense
@@ -166,8 +171,8 @@ func (s *mWSensesSequence) UnmarshalJSON(data []byte) error {
 }
 
 type mWParenthesizedSenseSequence struct {
-	BindingSubstitute mWBindingSubstitution
-	Senses            []mWSense
+	BindingSubstitution *mWBindingSubstitution
+	Senses              []mWSense
 }
 
 func (s *mWParenthesizedSenseSequence) UnmarshalJSON(data []byte) error {
@@ -205,7 +210,7 @@ func (s *mWParenthesizedSenseSequence) UnmarshalJSON(data []byte) error {
 			var bindingSubstitute mWBindingSubstitution
 			err = json.Unmarshal(*subsections[1], &bindingSubstitute)
 			if err == nil {
-				s.BindingSubstitute = bindingSubstitute
+				s.BindingSubstitution = &bindingSubstitute
 			}
 		}
 
@@ -225,7 +230,7 @@ type mWSense struct {
 	SenseOrder        string              `json:"sn"`
 	DefiningText      mWDefiningText      `json:"dt"`
 	SenseStatusLabels mWSenseStatusLabels `json:"sls"`
-	DividedSense      mWDividedSense      `json:"sdsense"`
+	DividedSense      *mWDividedSense     `json:"sdsense"`
 }
 
 type mWDividedSense struct {
@@ -235,7 +240,7 @@ type mWDividedSense struct {
 
 type mWDefiningText struct {
 	Text       string
-	InfoNotes  mWSupplimentalNote
+	InfoNotes  *mWSupplimentalNote
 	UsageNotes []mWUsageNote
 	Examples   []mWVerbalIllustration
 }
@@ -400,7 +405,7 @@ func getSubdirectoryForAudio(fileName string) string {
 	return fileName[0:1]
 }
 
-func getDefinitionFromMWDictionary(item string) ([]mWEntry, error) {
+func getDefinitionFromMWDictionary(item string) (*mWDictionaryResponse, error) {
 	if mWApiToken == "" {
 		mWApiToken = os.Getenv("MW_DICTIONARY_API_TOKEN")
 		if mWApiToken == "" {
@@ -419,12 +424,180 @@ func getDefinitionFromMWDictionary(item string) ([]mWEntry, error) {
 		return nil, err
 	}
 
-	var entries []mWEntry
-	err = json.Unmarshal(contents, &entries)
+	var response mWDictionaryResponse
+	err = json.Unmarshal(contents, &response.Entries)
 	if err != nil {
 		fmt.Printf("Failed response deserialization from Merriam Webster Dictionary for '%s'", item)
 		return nil, err
 	}
 
-	return nil, nil
+	return &response, nil
+}
+
+func convertMWDictionaryResponse(mWResponse *mWDictionaryResponse) *responseContent {
+	var builder responseBuilder
+
+	for _, mWEntry := range mWResponse.Entries {
+		builder.append(fmt.Sprintf("▫️%s", mWEntry.HeadwordInfo.Headword))
+		if mWEntry.PartOfSpeech != "" {
+			builder.append(fmt.Sprintf(" (%s)\n", mWEntry.PartOfSpeech))
+		} else {
+			builder.append("\n")
+		}
+
+		pronunciations := formatMWPronunciations(mWEntry.HeadwordInfo.Pronunciations)
+		if pronunciations != "" {
+			builder.append(pronunciations)
+			builder.append("\n")
+		}
+
+		for _, defenitionSection := range mWEntry.DefinitionSections {
+			if defenitionSection.VerbDivider != "" {
+				builder.append(fmt.Sprintf("[<i>%s</i>]\n", defenitionSection.VerbDivider))
+			}
+
+			for _, senseSection := range defenitionSection.SenseSequence.Items {
+				if senseSection.BindingSubstitution != nil {
+					builder.append(formatMWSense(senseSection.BindingSubstitution.Sense))
+					builder.append("\n")
+				}
+
+				for _, parenthesizedSenseSeqense := range senseSection.ParenthesizedSenseSequences {
+					if parenthesizedSenseSeqense.BindingSubstitution != nil {
+						builder.append(formatMWSense(parenthesizedSenseSeqense.BindingSubstitution.Sense))
+						builder.append("\n")
+					}
+
+					for _, sense := range parenthesizedSenseSeqense.Senses {
+						builder.append(formatMWSense(sense))
+						builder.append("\n")
+					}
+				}
+
+				for _, sense := range senseSection.Senses {
+					builder.append(formatMWSense(sense))
+					builder.append("\n")
+				}
+			}
+		}
+	}
+
+	responseContent := builder.finish()
+	responseContent.content = processMWString(responseContent.content)
+
+	print(responseContent.content)
+	return responseContent
+}
+
+func formatMWPronunciations(pronunciations []mWPronunciation) string {
+	var sb strings.Builder
+
+	isFirst := true
+	for _, mWPronunciation := range pronunciations {
+		if mWPronunciation.Audio.FileName == "" && mWPronunciation.Transcription == "" {
+			continue
+		}
+
+		if isFirst {
+			sb.WriteRune('\\')
+		}
+
+		audioUrl := ""
+		if mWPronunciation.Audio.FileName != "" {
+			audioUrl = fmt.Sprintf(mWAudioLinkFormat, getSubdirectoryForAudio(mWPronunciation.Audio.FileName), mWPronunciation.Audio.FileName)
+		}
+
+		if mWPronunciation.Transcription != "" {
+			if audioUrl == "" {
+				sb.WriteString(mWPronunciation.Transcription)
+			} else {
+				sb.WriteString(fmt.Sprintf("<a href=\"%s\">%s 🎧</a>", audioUrl, mWPronunciation.Transcription))
+			}
+		} else {
+			sb.WriteString(fmt.Sprintf("<a href=\"%s\">🎧</a>", audioUrl))
+		}
+
+		sb.WriteRune('\\')
+		isFirst = false
+	}
+
+	return sb.String()
+}
+
+func formatMWSense(sense mWSense) string {
+	var sb strings.Builder
+
+	if sense.SenseOrder != "" {
+		sb.WriteString(fmt.Sprintf("<b>%s</b>", sense.SenseOrder))
+	}
+
+	sb.WriteString(formatMWDefiningText(sense.DefiningText))
+
+	if sense.DividedSense != nil {
+		definingText := formatMWDefiningText(sense.DividedSense.DefinitionText)
+		sb.WriteString(fmt.Sprintf("\n<i>%s</i>%s", sense.DividedSense.SenseDivider, definingText))
+	}
+
+	return sb.String()
+}
+
+func formatMWDefiningText(definingText mWDefiningText) string {
+	var sb strings.Builder
+	sb.WriteString(definingText.Text)
+
+	for _, usageNote := range definingText.UsageNotes {
+		if usageNote.Text != "" {
+			sb.WriteString(fmt.Sprintf("\n— %s", usageNote.Text))
+		}
+
+		for _, usageNoteExample := range usageNote.Examples {
+			if usageNoteExample.Text != "" {
+				sb.WriteString(fmt.Sprintf("\n// %s", usageNoteExample.Text))
+			}
+		}
+	}
+
+	if definingText.InfoNotes != nil {
+		sb.WriteString(fmt.Sprintf("\n— %s", definingText.InfoNotes.Text))
+		for _, example := range definingText.InfoNotes.Examples {
+			sb.WriteString(fmt.Sprintf("\n// %s", example.Text))
+		}
+	}
+
+	for _, example := range definingText.Examples {
+		if example.Text != "" {
+			sb.WriteString(fmt.Sprintf("\n// %s", example.Text))
+		}
+	}
+
+	return sb.String()
+}
+
+func processMWString(mWString string) string {
+	mWString = strings.ReplaceAll(mWString, "{b}", "<b>")        // display text in bold (opening)
+	mWString = strings.ReplaceAll(mWString, "{/b}", "</b>")      // display text in bold (closing)
+	mWString = strings.ReplaceAll(mWString, "{bc}", "<b>: </b>") // output a bold colon and a space
+	mWString = strings.ReplaceAll(mWString, "{it}", "<i>")       // display text in italics (opening)
+	mWString = strings.ReplaceAll(mWString, "{/it}", "</i>")     // display text in italics (closing)
+	mWString = strings.ReplaceAll(mWString, "{ldquo}", "“")      // output a left double quote character (U+201C: “)
+	mWString = strings.ReplaceAll(mWString, "{rdquo}", "”")      // output a right double quote character (U+201D: ”)
+	mWString = strings.ReplaceAll(mWString, "{sc}", "")          // display text in small capitals (opening)
+	mWString = strings.ReplaceAll(mWString, "{/sc}", "")         // display text in small capitals (closing)
+	mWString = strings.ReplaceAll(mWString, "{inf}", " [^")      // display text in subscript (opening)
+	mWString = strings.ReplaceAll(mWString, "{/inf}", "] ")      // display text in subscript (closing)
+	mWString = strings.ReplaceAll(mWString, "{sup}", " [_")      // display text in superscript (opening)
+	mWString = strings.ReplaceAll(mWString, "{/sup}", "] ")      // display text in superscript (closing)
+
+	mWString = strings.ReplaceAll(mWString, "{gloss}", "[")          // encloses a gloss explaining how a word or phrase is used in a particular context (opening)
+	mWString = strings.ReplaceAll(mWString, "{/gloss}", "]")         // encloses a gloss explaining how a word or phrase is used in a particular context (closing)
+	mWString = strings.ReplaceAll(mWString, "{parahw}", "<b>")       // encloses an instance of the headword within a paragraph label (opening)
+	mWString = strings.ReplaceAll(mWString, "{/qword}", "</b>")      // encloses an instance of the headword within a paragraph label (closing)
+	mWString = strings.ReplaceAll(mWString, "{phrase}", "<b><i>")    // encloses a phrase in running text (this may be a phrase containing the headword or a defined run-on phrase) (opening)
+	mWString = strings.ReplaceAll(mWString, "{/phrase}", "</i></b>") // encloses a phrase in running text (this may be a phrase containing the headword or a defined run-on phrase) (closing)
+	mWString = strings.ReplaceAll(mWString, "{qword}", "<i>\"")      // encloses an instance of the headword within a quote (opening)
+	mWString = strings.ReplaceAll(mWString, "{/qword}", "\"</i>")    // encloses an instance of the headword within a quote (closing)
+	mWString = strings.ReplaceAll(mWString, "{wi}", "<b><i>")        // encloses an instance of the headword used in running text (opening)
+	mWString = strings.ReplaceAll(mWString, "{/wi}", "</i></b>")     // encloses an instance of the headword used in running text (closing)
+
+	return mWString
 }

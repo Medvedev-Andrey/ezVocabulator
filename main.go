@@ -160,24 +160,23 @@ func handleUserTrainingDataRequest(inMessage *tgbotapi.Message) {
 }
 
 func handleDictionaryRequest(inMessage *tgbotapi.Message) {
-	lrResponse, err := getDefinitionFromLinguaRobot(inMessage.Text)
+	mWResponse, err := getDefinitionFromMWDictionary(inMessage.Text)
 	if err != nil {
 		handleErrorWithReply(inMessage, err)
 		return
-	} else if len(lrResponse.Entries) == 0 {
+	} else if len(mWResponse.Entries) == 0 {
 		sendSimpleReply(inMessage, "Nothing has been found ... 😞")
 		return
 	}
 
-	response := convertLinguaRobotResponse(lrResponse)
-	responseContents := formatUserResponse(response)
+	responseContent := convertMWDictionaryResponse(mWResponse)
 
 	messageIDToReply := inMessage.MessageID
-	for _, responseContent := range responseContents {
+	for _, responseContentPart := range splitResponseContents(responseContent.content, maxContentLength, '\n') {
 		msg := tgbotapi.NewMessage(inMessage.Chat.ID, "")
 		msg.ReplyToMessageID = messageIDToReply
 		msg.ParseMode = "HTML"
-		msg.Text = responseContent.content
+		msg.Text = responseContentPart
 
 		sentMsg, err := bot.Send(msg)
 		if err != nil {
