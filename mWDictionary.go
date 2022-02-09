@@ -485,7 +485,6 @@ func convertMWDictionaryResponse(mWResponse *mWDictionaryResponse) *responseCont
 	responseContent := builder.finish()
 	responseContent.content = processMWString(responseContent.content)
 
-	print(responseContent.content)
 	return responseContent
 }
 
