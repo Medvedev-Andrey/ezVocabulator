@@ -476,7 +476,7 @@ func convertMWDictionaryResponse(mWResponse *mWDictionaryResponse) *responseCont
 					}
 
 					for idx, sense := range parenthesizedSenseSeqense.Senses {
-						builder.append(formatMWSense(fmt.Sprintf("▪(%d)", idx), sense))
+						builder.append(formatMWSense(fmt.Sprintf("▪(%d)", idx+1), sense))
 						builder.append("\n")
 					}
 				}
