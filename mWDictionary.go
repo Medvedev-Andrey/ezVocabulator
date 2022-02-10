@@ -445,7 +445,7 @@ func convertMWDictionaryResponse(mWResponse *mWDictionaryResponse) *responseCont
 			builder.append("\n")
 		}
 
-		builder.append(fmt.Sprintf("▫️%s", mWEntry.HeadwordInfo.Headword))
+		builder.append(fmt.Sprintf("🔘 <code>%s</code>", mWEntry.HeadwordInfo.Headword))
 		if mWEntry.PartOfSpeech != "" {
 			builder.append(fmt.Sprintf(" <i>%s</i>\n", mWEntry.PartOfSpeech))
 		} else {
@@ -465,24 +465,24 @@ func convertMWDictionaryResponse(mWResponse *mWDictionaryResponse) *responseCont
 
 			for _, senseSection := range defenitionSection.SenseSequence.Items {
 				if senseSection.BindingSubstitution != nil {
-					builder.append(formatMWSense(senseSection.BindingSubstitution.Sense))
+					builder.append(formatMWSense("🔳", senseSection.BindingSubstitution.Sense))
 					builder.append("\n")
 				}
 
 				for _, parenthesizedSenseSeqense := range senseSection.ParenthesizedSenseSequences {
 					if parenthesizedSenseSeqense.BindingSubstitution != nil {
-						builder.append(formatMWSense(parenthesizedSenseSeqense.BindingSubstitution.Sense))
+						builder.append(formatMWSense("⬜️", parenthesizedSenseSeqense.BindingSubstitution.Sense))
 						builder.append("\n")
 					}
 
 					for _, sense := range parenthesizedSenseSeqense.Senses {
-						builder.append(formatMWSense(sense))
+						builder.append(formatMWSense("◻️", sense))
 						builder.append("\n")
 					}
 				}
 
 				for _, sense := range senseSection.Senses {
-					builder.append(formatMWSense(sense))
+					builder.append(formatMWSense("⬜️", sense))
 					builder.append("\n")
 				}
 			}
@@ -530,13 +530,10 @@ func formatMWPronunciations(pronunciations []mWPronunciation) string {
 	return sb.String()
 }
 
-func formatMWSense(sense mWSense) string {
+func formatMWSense(marker string, sense mWSense) string {
 	var sb strings.Builder
 
-	if sense.SenseOrder != "" {
-		sb.WriteString(fmt.Sprintf("<b>%s</b>", sense.SenseOrder))
-	}
-
+	sb.WriteString(marker)
 	sb.WriteString(formatMWDefiningText(sense.DefiningText))
 
 	if sense.DividedSense != nil {
