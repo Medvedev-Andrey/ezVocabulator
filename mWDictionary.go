@@ -465,14 +465,14 @@ func convertMWDictionaryResponse(mWResponse *mWDictionaryResponse) *responseCont
 
 			for _, senseSection := range defenitionSection.SenseSequence.Items {
 				if senseSection.BindingSubstitution != nil {
-					builder.append(formatMWSense("▪️", senseSection.BindingSubstitution.Sense))
+					builder.append(formatMWSense("◽️", senseSection.BindingSubstitution.Sense))
 					builder.append("\n")
 				}
 
 				for _, parenthesizedSenseSeqense := range senseSection.ParenthesizedSenseSequences {
 					requiresParenthesis := false
 					if parenthesizedSenseSeqense.BindingSubstitution != nil {
-						builder.append(formatMWSense("▪️", parenthesizedSenseSeqense.BindingSubstitution.Sense))
+						builder.append(formatMWSense("◽️", parenthesizedSenseSeqense.BindingSubstitution.Sense))
 						builder.append("\n")
 
 						requiresParenthesis = true
