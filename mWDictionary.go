@@ -445,7 +445,7 @@ func convertMWDictionaryResponse(mWResponse *mWDictionaryResponse) *responseCont
 			builder.append("\n")
 		}
 
-		builder.append(fmt.Sprintf("🔘 <code>%s</code>", mWEntry.HeadwordInfo.Headword))
+		builder.append(fmt.Sprintf("🔲 <code>%s</code>", mWEntry.HeadwordInfo.Headword))
 		if mWEntry.PartOfSpeech != "" {
 			builder.append(fmt.Sprintf(" <i>%s</i>\n", mWEntry.PartOfSpeech))
 		} else {
@@ -470,13 +470,23 @@ func convertMWDictionaryResponse(mWResponse *mWDictionaryResponse) *responseCont
 				}
 
 				for _, parenthesizedSenseSeqense := range senseSection.ParenthesizedSenseSequences {
+					requiresParenthesis := false
 					if parenthesizedSenseSeqense.BindingSubstitution != nil {
 						builder.append(formatMWSense("▪️", parenthesizedSenseSeqense.BindingSubstitution.Sense))
 						builder.append("\n")
+
+						requiresParenthesis = true
 					}
 
 					for idx, sense := range parenthesizedSenseSeqense.Senses {
-						builder.append(formatMWSense(fmt.Sprintf("▪(%d)", idx+1), sense))
+						var marker string
+						if requiresParenthesis {
+							marker = "▪"
+						} else {
+							marker = fmt.Sprintf("▪(%d) ", idx+1)
+						}
+
+						builder.append(formatMWSense(marker, sense))
 						builder.append("\n")
 					}
 				}
