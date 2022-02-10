@@ -593,6 +593,7 @@ func processMWString(mWString string) string {
 	mWString = strings.ReplaceAll(mWString, "{/inf}", "] ")      // display text in subscript (closing)
 	mWString = strings.ReplaceAll(mWString, "{sup}", " [_")      // display text in superscript (opening)
 	mWString = strings.ReplaceAll(mWString, "{/sup}", "] ")      // display text in superscript (closing)
+	mWString = strings.ReplaceAll(mWString, "{p_br}", "\n")      // indicates where a paragraph break should be inserted
 
 	mWString = strings.ReplaceAll(mWString, "{gloss}", "[")          // encloses a gloss explaining how a word or phrase is used in a particular context (opening)
 	mWString = strings.ReplaceAll(mWString, "{/gloss}", "]")         // encloses a gloss explaining how a word or phrase is used in a particular context (closing)
@@ -604,6 +605,109 @@ func processMWString(mWString string) string {
 	mWString = strings.ReplaceAll(mWString, "{/qword}", "\"</i>")    // encloses an instance of the headword within a quote (closing)
 	mWString = strings.ReplaceAll(mWString, "{wi}", "<b><i>")        // encloses an instance of the headword used in running text (opening)
 	mWString = strings.ReplaceAll(mWString, "{/wi}", "</i></b>")     // encloses an instance of the headword used in running text (closing)
+
+	mWString = strings.ReplaceAll(mWString, "{dx}", "— ") // encloses introductory text and one or more {dxt} cross-reference tokens (opening)
+	mWString = strings.ReplaceAll(mWString, "{/dx}", "")  // encloses introductory text and one or more {dxt} cross-reference tokens (closing)
+
+	mWString = strings.ReplaceAll(mWString, "{dx_def}", "— ") // used for a parenthetical cross-reference; encloses introductory text and one or more {dxt} cross-reference tokens (opening)
+	mWString = strings.ReplaceAll(mWString, "{/dx_def}", "")  // used for a parenthetical cross-reference; encloses introductory text and one or more {dxt} cross-reference tokens (closing)
+
+	mWString = strings.ReplaceAll(mWString, "{dx_ety}", "— ") // used for a directional cross-reference within an etymology; encloses introductory text and one or more {dxt} cross-reference tokens (opening)
+	mWString = strings.ReplaceAll(mWString, "{/dx_ety}", "")  // used for a directional cross-reference within an etymology; encloses introductory text and one or more {dxt} cross-reference tokens (closing)
+
+	mWString = strings.ReplaceAll(mWString, "{ma}", "— <i>more at</i> ") // used for a "more at" informational cross-reference within an etymology; encloses introductory text and one or more {mat} tokens (opening)
+	mWString = strings.ReplaceAll(mWString, "{/ma}", "")                 // used for a "more at" informational cross-reference within an etymology; encloses introductory text and one or more {mat} tokens (closing)
+
+	index := strings.Index(mWString, "{a_link|")
+	for index >= 0 {
+		endIndex := strings.IndexRune(mWString[index:], '}') + index
+		aLinkData := mWString[index : endIndex+1]
+		data := aLinkData[len("{a_link|") : len(aLinkData)-1]
+		replacement := fmt.Sprintf("<i>%s</i>", data)
+		mWString = strings.ReplaceAll(mWString, aLinkData, replacement)
+
+		index = strings.Index(mWString, "{a_link|")
+	}
+
+	index = strings.Index(mWString, "{d_link|")
+	for index >= 0 {
+		endIndex := strings.IndexRune(mWString[index:], '}') + index
+		dLinkData := mWString[index : endIndex+1]
+		firstArgOffset := len("{d_link|") + 1
+		secondSplitterOffset := firstArgOffset + strings.IndexRune(dLinkData[firstArgOffset:], '|')
+		hyperlinkData := dLinkData[len("{d_link|"):secondSplitterOffset]
+		replacement := fmt.Sprintf("<i>%s</i>", hyperlinkData)
+		mWString = strings.ReplaceAll(mWString, dLinkData, replacement)
+		index = strings.Index(mWString, "{d_link|")
+	}
+
+	index = strings.Index(mWString, "{i_link|")
+	for index >= 0 {
+		endIndex := strings.IndexRune(mWString[index:], '}') + index
+		iLinkData := mWString[index : endIndex+1]
+		firstArgOffset := len("{i_link|") + 1
+		secondSplitterOffset := firstArgOffset + strings.IndexRune(iLinkData[firstArgOffset:], '|')
+		hyperlinkData := iLinkData[len("{i_link|"):secondSplitterOffset]
+		replacement := fmt.Sprintf("<i>%s</i>", hyperlinkData)
+		mWString = strings.ReplaceAll(mWString, iLinkData, replacement)
+		index = strings.Index(mWString, "{i_link|")
+	}
+
+	index = strings.Index(mWString, "{et_link|")
+	for index >= 0 {
+		endIndex := strings.IndexRune(mWString[index:], '}') + index
+		etLinkData := mWString[index : endIndex+1]
+		firstArgOffset := len("{et_link|") + 1
+		secondSplitterOffset := firstArgOffset + strings.IndexRune(etLinkData[firstArgOffset:], '|')
+		hyperlinkData := etLinkData[len("{et_link|"):secondSplitterOffset]
+		replacement := fmt.Sprintf("<i>%s</i>", hyperlinkData)
+		mWString = strings.ReplaceAll(mWString, etLinkData, replacement)
+		index = strings.Index(mWString, "{et_link|")
+	}
+
+	index = strings.Index(mWString, "{mat|")
+	for index >= 0 {
+		endIndex := strings.IndexRune(mWString[index:], '}') + index
+		matLinkData := mWString[index : endIndex+1]
+		firstArgOffset := len("{mat|") + 1
+		secondSplitterOffset := firstArgOffset + strings.IndexRune(matLinkData[firstArgOffset:], '|')
+		hyperlinkData := matLinkData[len("{mat|"):secondSplitterOffset]
+		replacement := fmt.Sprintf("<i>%s</i>", hyperlinkData)
+		mWString = strings.ReplaceAll(mWString, matLinkData, replacement)
+		index = strings.Index(mWString, "{mat|")
+	}
+
+	index = strings.Index(mWString, "{sxt|")
+	for index >= 0 {
+		endIndex := strings.IndexRune(mWString[index:], '}') + index
+		sxtLinkData := mWString[index : endIndex+1]
+		firstArgOffset := len("{sxt|") + 1
+		secondSplitterOffset := firstArgOffset + strings.IndexRune(sxtLinkData[firstArgOffset:], '|')
+		hyperlinkData := sxtLinkData[len("{sxt|"):secondSplitterOffset]
+		replacement := fmt.Sprintf("<i>%s</i>", hyperlinkData)
+		mWString = strings.ReplaceAll(mWString, sxtLinkData, replacement)
+		index = strings.Index(mWString, "{sxt|")
+	}
+
+	index = strings.Index(mWString, "{dxt|")
+	for index >= 0 {
+		endIndex := strings.IndexRune(mWString[index:], '}') + index
+		dxtLinkData := mWString[index : endIndex+1]
+		firstArgOffset := len("{dxt|") + 1
+		secondSplitterOffset := firstArgOffset + strings.IndexRune(dxtLinkData[firstArgOffset:], '|')
+		hyperlinkData := dxtLinkData[len("{dxt|"):secondSplitterOffset]
+		replacement := fmt.Sprintf("<i>%s</i>", hyperlinkData)
+		mWString = strings.ReplaceAll(mWString, dxtLinkData, replacement)
+		index = strings.Index(mWString, "{dxt|")
+	}
+
+	index = strings.Index(mWString, "{ds|")
+	for index >= 0 {
+		endIndex := strings.IndexRune(mWString[index:], '}') + index
+		dsData := mWString[index : endIndex+1]
+		mWString = strings.ReplaceAll(mWString, dsData, "")
+		index = strings.Index(mWString, "{ds|")
+	}
 
 	return mWString
 }
