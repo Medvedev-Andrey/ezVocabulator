@@ -623,7 +623,7 @@ func processMWString(mWString string) string {
 		endIndex := strings.IndexRune(mWString[index:], '}') + index
 		aLinkData := mWString[index : endIndex+1]
 		data := aLinkData[len("{a_link|") : len(aLinkData)-1]
-		replacement := fmt.Sprintf("<i>%s</i>", data)
+		replacement := fmt.Sprintf("see <code>%s</code>", data)
 		mWString = strings.ReplaceAll(mWString, aLinkData, replacement)
 
 		index = strings.Index(mWString, "{a_link|")
@@ -636,7 +636,7 @@ func processMWString(mWString string) string {
 		firstArgOffset := len("{d_link|") + 1
 		secondSplitterOffset := firstArgOffset + strings.IndexRune(dLinkData[firstArgOffset:], '|')
 		hyperlinkData := dLinkData[len("{d_link|"):secondSplitterOffset]
-		replacement := fmt.Sprintf("<i>%s</i>", hyperlinkData)
+		replacement := fmt.Sprintf("see <code>%s</code>", hyperlinkData)
 		mWString = strings.ReplaceAll(mWString, dLinkData, replacement)
 		index = strings.Index(mWString, "{d_link|")
 	}
@@ -648,7 +648,7 @@ func processMWString(mWString string) string {
 		firstArgOffset := len("{i_link|") + 1
 		secondSplitterOffset := firstArgOffset + strings.IndexRune(iLinkData[firstArgOffset:], '|')
 		hyperlinkData := iLinkData[len("{i_link|"):secondSplitterOffset]
-		replacement := fmt.Sprintf("<i>%s</i>", hyperlinkData)
+		replacement := fmt.Sprintf("see <code>%s</code>", hyperlinkData)
 		mWString = strings.ReplaceAll(mWString, iLinkData, replacement)
 		index = strings.Index(mWString, "{i_link|")
 	}
@@ -660,7 +660,7 @@ func processMWString(mWString string) string {
 		firstArgOffset := len("{et_link|") + 1
 		secondSplitterOffset := firstArgOffset + strings.IndexRune(etLinkData[firstArgOffset:], '|')
 		hyperlinkData := etLinkData[len("{et_link|"):secondSplitterOffset]
-		replacement := fmt.Sprintf("<i>%s</i>", hyperlinkData)
+		replacement := fmt.Sprintf("see <code>%s</code>", hyperlinkData)
 		mWString = strings.ReplaceAll(mWString, etLinkData, replacement)
 		index = strings.Index(mWString, "{et_link|")
 	}
@@ -672,7 +672,7 @@ func processMWString(mWString string) string {
 		firstArgOffset := len("{mat|") + 1
 		secondSplitterOffset := firstArgOffset + strings.IndexRune(matLinkData[firstArgOffset:], '|')
 		hyperlinkData := matLinkData[len("{mat|"):secondSplitterOffset]
-		replacement := fmt.Sprintf("<i>%s</i>", hyperlinkData)
+		replacement := fmt.Sprintf("<code>%s</code>", hyperlinkData)
 		mWString = strings.ReplaceAll(mWString, matLinkData, replacement)
 		index = strings.Index(mWString, "{mat|")
 	}
@@ -684,7 +684,7 @@ func processMWString(mWString string) string {
 		firstArgOffset := len("{sx|") + 1
 		secondSplitterOffset := firstArgOffset + strings.IndexRune(sxLinkData[firstArgOffset:], '|')
 		hyperlinkData := sxLinkData[len("{sx|"):secondSplitterOffset]
-		replacement := fmt.Sprintf("<i>%s</i>", hyperlinkData)
+		replacement := fmt.Sprintf("see synonymous <code>%s</code>", hyperlinkData)
 		mWString = strings.ReplaceAll(mWString, sxLinkData, replacement)
 		index = strings.Index(mWString, "{sx|")
 	}
@@ -696,7 +696,7 @@ func processMWString(mWString string) string {
 		firstArgOffset := len("{dxt|") + 1
 		secondSplitterOffset := firstArgOffset + strings.IndexRune(dxtLinkData[firstArgOffset:], '|')
 		hyperlinkData := dxtLinkData[len("{dxt|"):secondSplitterOffset]
-		replacement := fmt.Sprintf("<i>%s</i>", hyperlinkData)
+		replacement := fmt.Sprintf("see <code>%s</code>", hyperlinkData)
 		mWString = strings.ReplaceAll(mWString, dxtLinkData, replacement)
 		index = strings.Index(mWString, "{dxt|")
 	}
