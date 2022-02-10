@@ -481,9 +481,9 @@ func convertMWDictionaryResponse(mWResponse *mWDictionaryResponse) *responseCont
 					for idx, sense := range parenthesizedSenseSeqense.Senses {
 						var marker string
 						if requiresParenthesis {
-							marker = "▪"
-						} else {
 							marker = fmt.Sprintf("▪(%d) ", idx+1)
+						} else {
+							marker = "▪"
 						}
 
 						builder.append(formatMWSense(marker, sense))
