@@ -677,16 +677,16 @@ func processMWString(mWString string) string {
 		index = strings.Index(mWString, "{mat|")
 	}
 
-	index = strings.Index(mWString, "{sxt|")
+	index = strings.Index(mWString, "{sx|")
 	for index >= 0 {
 		endIndex := strings.IndexRune(mWString[index:], '}') + index
-		sxtLinkData := mWString[index : endIndex+1]
-		firstArgOffset := len("{sxt|") + 1
-		secondSplitterOffset := firstArgOffset + strings.IndexRune(sxtLinkData[firstArgOffset:], '|')
-		hyperlinkData := sxtLinkData[len("{sxt|"):secondSplitterOffset]
+		sxLinkData := mWString[index : endIndex+1]
+		firstArgOffset := len("{sx|") + 1
+		secondSplitterOffset := firstArgOffset + strings.IndexRune(sxLinkData[firstArgOffset:], '|')
+		hyperlinkData := sxLinkData[len("{sx|"):secondSplitterOffset]
 		replacement := fmt.Sprintf("<i>%s</i>", hyperlinkData)
-		mWString = strings.ReplaceAll(mWString, sxtLinkData, replacement)
-		index = strings.Index(mWString, "{sxt|")
+		mWString = strings.ReplaceAll(mWString, sxLinkData, replacement)
+		index = strings.Index(mWString, "{sx|")
 	}
 
 	index = strings.Index(mWString, "{dxt|")
